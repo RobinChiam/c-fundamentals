@@ -1,2 +1,2 @@
-# c-fundamentals
-This is a simple repository to recap on C Programming Fundamentals
+# C Fundamentals
+This is a simple repository to recap on C Programming Fundamentals.
