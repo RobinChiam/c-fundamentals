@@ -1,2 +1,31 @@
+# Windows / MinGW executables
+*.exe
+*.out
+*.o
+*.obj
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+
+# Legacy path-specific ignore (kept for compatibility)
 Basic\ IO/main.exe
+
+# Editor and tooling
 .vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+
+# Temporary / cache
+*.tmp
+*.temp
+*.log
+__pycache__/
+
+# Generated lesson data files (created when you run file I/O / project demos)
+**/tasks.txt
+**/sample_data.txt
+**/inventory.txt
