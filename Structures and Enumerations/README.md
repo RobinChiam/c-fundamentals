@@ -84,6 +84,8 @@ Try them before opening `solution.c`.
 - [ ] Fixed arrays of structs need an explicit count + capacity
 - [ ] Record assignment (`a = b`) copies all members
 
+Next: [File Input and Output](../File%20Input%20and%20Output/)
+
 ## Note on `solution.c`
 
 `solution.c` is the reference solution for the practice exercises above (product inventory variant).

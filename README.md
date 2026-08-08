@@ -44,6 +44,38 @@ program.exe
 
 **Do not commit generated `.exe` files** (or `.o` object files). The `.gitignore` file already ignores them.
 
+## Maintainer compile check
+
+From the repository root you can compile every lesson with strict warnings:
+
+```text
+make all
+make solutions
+```
+
+Binaries are written to `build/`. See [CONTRIBUTING.md](CONTRIBUTING.md) for contributor notes.
+
+## Curriculum conventions
+
+Lessons intentionally duplicate small helpers (`pause_at_exit`, `read_int`, `read_line`) so each folder stays self-contained. When copying patterns forward, prefer these standards:
+
+**Pause at exit** (portable Enter wait — not a C language feature):
+
+```c
+static void pause_at_exit(void)
+{
+    int ch = 0;
+    printf("Press Enter to exit...");
+    do {
+        ch = getchar();
+    } while (ch != '\n' && ch != EOF);
+}
+```
+
+**Validated integer input** (from Lesson 4 onward): read a line with `fgets`, parse with `strtol`, drain overlong lines, check `errno == ERANGE`, and reject values outside `INT_MIN`/`INT_MAX` before casting to `int`.
+
+The capstone [Intermediate Console Project](Intermediate%20Console%20Project/) centralizes shared helpers in `util.c` as the modular end-state.
+
 ## Recommended study workflow
 
 1. Read the lesson `README.md` and note the objectives.
@@ -58,8 +90,8 @@ program.exe
 
 | Order | Lesson | Difficulty | What you will learn |
 |------:|--------|------------|---------------------|
-| 0 | [Basic IO](Basic%20IO/) | Beginner (starter) | Simple console input/output (existing starter) |
-| 0 | [Drawing Shapes](Drawing%20Shapes/) | Beginner (starter) | Nested loops drawing a pyramid (existing starter) |
+| 0 | [Basic IO](Basic%20IO/) | Beginner (starter) | Simple console input/output with safe `fgets` |
+| 0 | [Drawing Shapes](Drawing%20Shapes/) | Beginner (starter) | Nested loops drawing a pyramid with validated input |
 | 1 | [Variables and Data Types](Variables%20and%20Data%20Types/) | Beginner | Declarations, types, format specifiers, `sizeof` |
 | 2 | [Operators and Expressions](Operators%20and%20Expressions/) | Beginner | Arithmetic, comparisons, logic, precedence |
 | 3 | [Conditional Statements](Conditional%20Statements/) | Beginner | `if` / `else`, `switch`, menus |
@@ -77,7 +109,7 @@ program.exe
 
 ## Notes about the starter lessons
 
-`Basic IO` and `Drawing Shapes` are the original starter programs. Newer lessons intentionally use safer input patterns (`fgets` plus parsing) rather than copying older `scanf` habits. Keep the starters for historical/context practice, but treat lessons 1–14 as the recommended path for good C habits.
+`Basic IO` and `Drawing Shapes` are the original starter programs, now updated with READMEs, `solution.c`, and the same safe-input habits as lessons 1–14. They remain labeled Lesson 0 for learners who want a minimal first compile before the full curriculum path.
 
 ## Pause-at-exit convention
 

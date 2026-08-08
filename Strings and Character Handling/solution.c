@@ -15,10 +15,12 @@
 
 static void pause_at_exit(void)
 {
-    /* Platform convenience for Windows consoles — not core C logic. */
+    int ch = 0;
+
     printf("Press Enter to exit...");
-    fflush(stdout);
-    (void)getchar();
+    do {
+        ch = getchar();
+    } while (ch != '\n' && ch != EOF);
 }
 
 static void strip_trailing_newline(char *text)

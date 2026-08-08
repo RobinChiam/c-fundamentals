@@ -6,13 +6,30 @@
 
 #include <string.h>
 
+static int title_is_valid(const char *title)
+{
+    size_t len = 0;
+
+    if (title == NULL || title[0] == '\0') {
+        return 0;
+    }
+    len = strlen(title);
+    if (len >= TASK_TITLE_MAX) {
+        return 0;
+    }
+    if (strchr(title, '|') != NULL || strchr(title, '\n') != NULL ||
+        strchr(title, '\r') != NULL) {
+        return 0;
+    }
+    return 1;
+}
+
 int task_make(Task *out, int id, const char *title, TaskStatus status,
               TaskPriority priority)
 {
-    if (out == NULL || title == NULL) {
-        return 0;
-    }
-    if (title[0] == '\0') {
+    size_t i = 0;
+
+    if (out == NULL || !title_is_valid(title)) {
         return 0;
     }
 
@@ -20,17 +37,10 @@ int task_make(Task *out, int id, const char *title, TaskStatus status,
     out->status = status;
     out->priority = priority;
 
-    /*
-     * Manual bounded copy: leave room for '\0'. snprintf is also fine;
-     * this keeps the dependency surface tiny and obvious for learners.
-     */
-    {
-        size_t i;
-        for (i = 0U; i + 1U < TASK_TITLE_MAX && title[i] != '\0'; i++) {
-            out->title[i] = title[i];
-        }
-        out->title[i] = '\0';
+    for (i = 0U; title[i] != '\0'; i++) {
+        out->title[i] = title[i];
     }
+    out->title[i] = '\0';
     return 1;
 }
 

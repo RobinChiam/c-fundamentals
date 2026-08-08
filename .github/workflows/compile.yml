@@ -1,0 +1,22 @@
+name: Compile curriculum
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install GCC
+        run: sudo apt-get update && sudo apt-get install -y gcc
+
+      - name: Compile lesson programs
+        run: make all
+
+      - name: Compile solution programs
+        run: make solutions

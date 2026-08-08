@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h> /* strtol */
 #include <errno.h>
+#include <limits.h>
 
 #define LINE_CAPACITY 64
 
@@ -50,6 +51,9 @@ static int read_int_prompt(const char *prompt, int *out_value)
         end++;
     }
     if (*end != '\0') {
+        return 0;
+    }
+    if (parsed < (long)INT_MIN || parsed > (long)INT_MAX) {
         return 0;
     }
 

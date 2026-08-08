@@ -112,6 +112,8 @@ after zeros[2] = 42: 0 0 42 0 0
 - [ ] I set pointers to `NULL` after `free` as a defensive habit
 - [ ] On partial failure I free earlier successes before returning
 
+Next: [Header Files and Multiple Source Files](../Header%20Files%20and%20Multiple%20Source%20Files/)
+
 ## Note on `solution.c`
 
 Attempt the exercises yourself first. `solution.c` walks through all three exercises with the same safe input and cleanup habits as the primary example.

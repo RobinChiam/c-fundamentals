@@ -28,7 +28,7 @@ typedef struct {
     TaskPriority priority;
 } Task;
 
-/* Fill a Task; copies title safely (truncates if needed). Returns 1 on success. */
+/* Fill a Task; copies title when valid (non-empty, no | or newlines, fits buffer). */
 int task_make(Task *out, int id, const char *title, TaskStatus status,
               TaskPriority priority);
 

@@ -1,7 +1,7 @@
 # Lesson 12: Header Files and Multiple Source Files
 
 **Difficulty:** Intermediate  
-**Prerequisites:** [Dynamic Memory Allocation](../Dynamic%20Memory%20Allocation/) (and Functions, Structures)
+**Prerequisites:** [Functions and Scope](../Functions%20and%20Scope/) and [Structures and Enumerations](../Structures%20and%20Enumerations/)
 
 ## Learning objectives
 
@@ -103,6 +103,8 @@ Distance from (0,0) to (3,4) = 5.000 (expect 5.000)
 - [ ] Implementations live in `.c` files
 - [ ] My build command lists every needed `.c`
 - [ ] The program links cleanly with `-Wall -Wextra -Wpedantic`
+
+Next: [Searching and Sorting](../Searching%20and%20Sorting/)
 
 ## Note on `solution.c`
 

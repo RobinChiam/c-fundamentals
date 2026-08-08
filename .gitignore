@@ -29,3 +29,6 @@ __pycache__/
 **/tasks.txt
 **/sample_data.txt
 **/inventory.txt
+
+# Makefile output
+build/

@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <limits.h>
 #include <string.h>
 
 #define LINE_CAPACITY 128
@@ -79,6 +80,10 @@ static int read_int(const char *prompt, int *out_value)
         }
         if (*end != '\0') {
             printf("Extra characters after the number; try again.\n");
+            continue;
+        }
+        if (parsed < (long)INT_MIN || parsed > (long)INT_MAX) {
+            printf("Number out of range; try again.\n");
             continue;
         }
 

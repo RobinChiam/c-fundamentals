@@ -33,6 +33,9 @@ Task *store_find_title_contains(TaskStore *store, const char *needle);
 /* Sort in place by priority (high first), then id. */
 void store_sort_by_priority(TaskStore *store);
 
+/* Sort in place by id ascending. */
+void store_sort_by_id(TaskStore *store);
+
 void store_print_all(const TaskStore *store);
 
 /*

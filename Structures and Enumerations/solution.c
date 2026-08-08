@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #define MAX_PRODUCTS 16
 #define NAME_SIZE 48
@@ -80,6 +81,9 @@ static int read_int(const char *prompt, int *out_value)
         end++;
     }
     if (*end != '\0') {
+        return 0;
+    }
+    if (parsed < (long)INT_MIN || parsed > (long)INT_MAX) {
         return 0;
     }
     *out_value = (int)parsed;
