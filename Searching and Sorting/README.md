@@ -93,6 +93,8 @@ Found 19 at index 3
 - [ ] I can sort both ascending and descending
 - [ ] I can state beginner Big-O for each demo algorithm
 
+Next: [Intermediate Console Project](../Intermediate%20Console%20Project/)
+
 ## Note on `solution.c`
 
 Complete the exercises in your own file first. `solution.c` implements all three with interactive targets (and sensible defaults if input fails).

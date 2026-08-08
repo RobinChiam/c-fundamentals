@@ -187,10 +187,19 @@ int main(void)
 
     printf("=== Lesson 14: Intermediate Console Project ===\n");
     printf("Task Tracker (educational). Default file: %s\n", DEFAULT_SAVE_PATH);
-    if (store_load(&store, DEFAULT_SAVE_PATH)) {
-        printf("Loaded %zu task(s) from %s.\n", store.count, DEFAULT_SAVE_PATH);
-    } else {
-        printf("No existing save loaded (starting empty).\n");
+    {
+        FILE *probe = fopen(DEFAULT_SAVE_PATH, "r");
+        if (probe == NULL) {
+            printf("No existing save found (starting empty).\n");
+        } else {
+            fclose(probe);
+            if (store_load(&store, DEFAULT_SAVE_PATH)) {
+                printf("Loaded %zu task(s) from %s.\n", store.count, DEFAULT_SAVE_PATH);
+            } else {
+                printf("Could not load %s (file is corrupt or invalid).\n",
+                       DEFAULT_SAVE_PATH);
+            }
+        }
     }
 
     while (running) {

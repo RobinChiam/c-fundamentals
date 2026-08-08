@@ -80,7 +80,7 @@ Press Enter to exit...
 
 1. Compute `n!` after validating that `n` is in a safe range (for example 0–20).
 2. Write a guess-the-number loop that hints “too low” / “too high” until correct.
-3. Print only even numbers in a range using `continue` to skip odds.
+3. Print numbers 1–20 skipping multiples of 3 using `continue`.
 
 Try the exercises yourself before opening `solution.c`. That file is the **reference solution** for the exercises above.
 

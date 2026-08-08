@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #define LINE_SIZE 128
 #define MAX_N 32
@@ -42,6 +43,9 @@ static int read_int(const char *prompt, int *out_value)
         end++;
     }
     if (*end != '\0') {
+        return 0;
+    }
+    if (parsed < (long)INT_MIN || parsed > (long)INT_MAX) {
         return 0;
     }
     *out_value = (int)parsed;

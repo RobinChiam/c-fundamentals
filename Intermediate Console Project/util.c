@@ -10,13 +10,27 @@
 
 int util_read_line(char *buffer, size_t size)
 {
+    char *nl = NULL;
+    int ch = 0;
+
     if (buffer == NULL || size == 0U) {
         return 0;
     }
     if (fgets(buffer, (int)size, stdin) == NULL) {
         return 0;
     }
-    buffer[strcspn(buffer, "\n")] = '\0';
+
+    nl = strchr(buffer, '\n');
+    if (nl == NULL) {
+        while ((ch = getchar()) != '\n' && ch != EOF) {
+        }
+        return 0;
+    }
+
+    *nl = '\0';
+    if (nl > buffer && nl[-1] == '\r') {
+        nl[-1] = '\0';
+    }
     return 1;
 }
 

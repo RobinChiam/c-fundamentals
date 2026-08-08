@@ -80,6 +80,8 @@ Try them before opening `solution.c`.
 - [ ] Never dereference an unchecked possibly-`NULL` pointer
 - [ ] `const` placement changes what is locked (pointee vs pointer)
 
+Next: [Structures and Enumerations](../Structures%20and%20Enumerations/)
+
 ## Note on `solution.c`
 
 `solution.c` is the reference solution for the practice exercises above.

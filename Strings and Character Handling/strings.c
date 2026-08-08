@@ -25,9 +25,12 @@
 /* Windows-console convenience — not part of the language lesson. */
 static void pause_at_exit(void)
 {
+    int ch = 0;
+
     printf("Press Enter to exit...");
-    fflush(stdout);
-    (void)getchar();
+    do {
+        ch = getchar();
+    } while (ch != '\n' && ch != EOF);
 }
 
 /* fgets keeps the newline when the line fits. Strip it so later strcmp /
@@ -43,6 +46,25 @@ static void strip_trailing_newline(char *text)
     if (len > 0U && text[len - 1U] == '\n') {
         text[len - 1U] = '\0';
     }
+}
+
+/* Read one line with fgets; drain overlong input so later prompts stay clean. */
+static int read_line(char *buffer, size_t size)
+{
+    if (buffer == NULL || size == 0U) {
+        return 0;
+    }
+    if (fgets(buffer, (int)size, stdin) == NULL) {
+        return 0;
+    }
+    if (strchr(buffer, '\n') == NULL) {
+        int ch = 0;
+        while ((ch = getchar()) != '\n' && ch != EOF) {
+        }
+        return 0;
+    }
+    strip_trailing_newline(buffer);
+    return 1;
 }
 
 /* Safer than strcpy when the destination has a known capacity:
@@ -140,12 +162,11 @@ int main(void)
     printf("Enter a short line of text:\n> ");
     fflush(stdout);
 
-    if (fgets(line, (int)sizeof line, stdin) == NULL) {
-        printf("No input available.\n");
+    if (!read_line(line, sizeof line)) {
+        printf("No input available or line too long.\n");
         pause_at_exit();
         return 1;
     }
-    strip_trailing_newline(line);
 
     len = strlen(line);
     printf("Length (strlen): %zu\n", len);
@@ -156,12 +177,11 @@ int main(void)
     /* Demonstrate strcmp (case-sensitive) vs our ignore-case helper. */
     printf("Enter a keyword to compare against your line:\n> ");
     fflush(stdout);
-    if (fgets(keyword, (int)sizeof keyword, stdin) == NULL) {
-        printf("No keyword.\n");
+    if (!read_line(keyword, sizeof keyword)) {
+        printf("No keyword or line too long.\n");
         pause_at_exit();
         return 1;
     }
-    strip_trailing_newline(keyword);
 
     if (strcmp(line, keyword) == 0) {
         printf("strcmp: exact match.\n");

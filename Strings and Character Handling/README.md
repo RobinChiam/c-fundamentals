@@ -82,6 +82,8 @@ Attempt these before opening `solution.c`.
 - [ ] Case-insensitive compare is something you implement (or carefully wrap)
 - [ ] `ctype.h` needs the `unsigned char` cast
 
+Next: [Pointers](../Pointers/)
+
 ## Note on `solution.c`
 
 `solution.c` is the reference solution for the practice exercises above.

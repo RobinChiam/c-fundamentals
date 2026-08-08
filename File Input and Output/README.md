@@ -104,6 +104,8 @@ Try them before opening `solution.c`.
 - [ ] Text record formats need careful parsing and validation
 - [ ] Missing files should be reported, not crash the process
 
+Next: [Dynamic Memory Allocation](../Dynamic%20Memory%20Allocation/)
+
 ## Note on `solution.c`
 
 `solution.c` is the reference solution for the practice exercises above. It also treats a missing file as an empty dataset when loading.

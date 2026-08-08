@@ -155,6 +155,25 @@ void store_sort_by_priority(TaskStore *store)
     }
 }
 
+void store_sort_by_id(TaskStore *store)
+{
+    size_t i;
+    size_t j;
+
+    if (store == NULL || store->items == NULL || store->count < 2U) {
+        return;
+    }
+    for (i = 1U; i < store->count; i++) {
+        Task key = store->items[i];
+        j = i;
+        while (j > 0U && task_compare_id_asc(&store->items[j - 1U], &key) > 0) {
+            store->items[j] = store->items[j - 1U];
+            j -= 1U;
+        }
+        store->items[j] = key;
+    }
+}
+
 void store_print_all(const TaskStore *store)
 {
     size_t i;
@@ -252,6 +271,12 @@ int store_load(TaskStore *store, const char *path)
         nl = strchr(line, '\n');
         if (nl != NULL) {
             *nl = '\0';
+        }
+        if (line[0] != '\0') {
+            size_t line_len = strlen(line);
+            if (line[line_len - 1U] == '\r') {
+                line[line_len - 1U] = '\0';
+            }
         }
         if (line[0] == '\0') {
             continue;

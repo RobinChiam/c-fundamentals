@@ -1,9 +1,11 @@
 /*
- * Lesson 14 — Exercise / enhancement demo: filter tasks by status
+ * Lesson 14 — Exercise / enhancement demo
  *
- * README enhancement exercises include filtering the list by status.
- * This program reuses task.c, store.c, and util.c. It loads tasks.txt
- * (if present), asks for a status, and prints matching tasks only.
+ * Demonstrates README enhancements:
+ *   1) Filter tasks by status
+ *   2) Priority counts
+ *   3) Edit a task title safely
+ *   4) Sort by id with store_sort_by_id
  *
  * Compile with the project modules:
  *   gcc -std=c17 -Wall -Wextra -Wpedantic solution.c task.c store.c util.c -o solution.exe
@@ -49,10 +51,6 @@ static void print_filtered(const TaskStore *store, TaskStatus status)
     }
 }
 
-/*
- * Optional demo: also count how many tasks are at each priority — another
- * README-style enhancement without changing the main tracker binary.
- */
 static void print_priority_counts(const TaskStore *store)
 {
     size_t i;
@@ -81,6 +79,26 @@ static void print_priority_counts(const TaskStore *store)
     printf("\nPriority counts: low=%zu medium=%zu high=%zu\n", low, medium, high);
 }
 
+static int edit_task_title(TaskStore *store, int id, const char *new_title)
+{
+    Task *existing = NULL;
+    Task updated;
+
+    if (store == NULL) {
+        return 0;
+    }
+    existing = store_find_by_id(store, id);
+    if (existing == NULL) {
+        return 0;
+    }
+    if (!task_make(&updated, existing->id, new_title, existing->status,
+                   existing->priority)) {
+        return 0;
+    }
+    *existing = updated;
+    return 1;
+}
+
 int main(void)
 {
     TaskStore store;
@@ -89,11 +107,12 @@ int main(void)
 
     store_init(&store);
 
-    printf("Lesson 14 — solution.c (filter-by-status enhancement)\n");
-    printf("Loads %s if available, then filters by status.\n\n", DEFAULT_SAVE_PATH);
+    printf("Lesson 14 — solution.c (enhancement demos)\n");
+    printf("Loads %s if available, then runs enhancement examples.\n\n",
+           DEFAULT_SAVE_PATH);
 
     if (!store_load(&store, DEFAULT_SAVE_PATH)) {
-        printf("No save file found — seeding two sample tasks in memory.\n");
+        printf("No save file found — seeding three sample tasks in memory.\n");
         (void)store_add(&store, "Write README notes", TASK_TODO, PRIORITY_HIGH);
         (void)store_add(&store, "Review store_load", TASK_DOING, PRIORITY_MEDIUM);
         (void)store_add(&store, "Celebrate compile", TASK_DONE, PRIORITY_LOW);
@@ -101,7 +120,7 @@ int main(void)
         printf("Loaded %zu task(s).\n", store.count);
     }
 
-    printf("\nFull list:\n");
+    printf("\nFull list (insertion order):\n");
     store_print_all(&store);
 
     printf("\nFilter status (todo/doing/done): ");
@@ -110,9 +129,19 @@ int main(void)
         printf("Invalid status — defaulting to todo.\n");
         status = TASK_TODO;
     }
-
     print_filtered(&store, status);
     print_priority_counts(&store);
+
+    printf("\n--- Enhancement 3: edit title for task id 1 ---\n");
+    if (edit_task_title(&store, 1, "Updated README notes")) {
+        printf("Title updated for id 1.\n");
+    } else {
+        printf("Could not update title (missing id or invalid title).\n");
+    }
+
+    printf("\n--- Enhancement 4: sort by id ---\n");
+    store_sort_by_id(&store);
+    store_print_all(&store);
 
     store_free(&store);
     util_pause_at_exit();

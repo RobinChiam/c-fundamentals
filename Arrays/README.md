@@ -80,6 +80,8 @@ Attempt these in your own file before opening `solution.c`.
 - [ ] Out-of-bounds access is undefined behavior, not a guaranteed crash
 - [ ] Aggregate helpers should take `(const int arr[], int length)` when they only read
 
+Next: [Strings and Character Handling](../Strings%20and%20Character%20Handling/)
+
 ## Note on `solution.c`
 
 `solution.c` is the reference solution for the practice exercises above. Study it after you try the exercises yourself.

@@ -71,7 +71,7 @@ Press Enter to exit...
 ## Practice exercises
 
 1. Declare Celsius and Fahrenheit temperatures; convert each way and print results.
-2. Print `sizeof` for `char`, `int`, `float`, and `double`.
+2. Print `sizeof` for `char`, `short`, `int`, `long`, and `long long` on your machine.
 3. Use a `const` tax rate to compute tax and total for an item price.
 
 Try the exercises yourself before opening `solution.c`. That file is the **reference solution** for the exercises above.

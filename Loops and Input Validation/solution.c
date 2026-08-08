@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <limits.h>
 #include <string.h>
 
 #define LINE_CAPACITY 128
@@ -61,6 +62,10 @@ static int read_int(const char *prompt, int *out_value)
         }
         if (*end != '\0') {
             printf("Extra characters; try again.\n");
+            continue;
+        }
+        if (parsed < (long)INT_MIN || parsed > (long)INT_MAX) {
+            printf("Number out of range; try again.\n");
             continue;
         }
 
@@ -116,10 +121,10 @@ int main(void)
 
     printf("Correct in %d attempt(s)!\n", attempts);
 
-    /* --- Exercise 3: even numbers with continue --- */
-    printf("\n=== Even numbers from 1 to 20 ===\n");
+    /* --- Exercise 3: skip multiples of 3 with continue --- */
+    printf("\n=== Numbers 1-20 (skip multiples of 3) ===\n");
     for (i = 1; i <= 20; i++) {
-        if (i % 2 != 0) {
+        if (i % 3 == 0) {
             continue;
         }
         printf("%d ", i);

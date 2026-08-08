@@ -21,7 +21,7 @@
 | `task.h` / `task.c` | `Task` struct, status/priority enums, compare/parse helpers |
 | `store.h` / `store.c` | Growable list, add/remove/search/sort, save/load |
 | `util.h` / `util.c` | `fgets` helpers, range parsing, pause-at-exit |
-| `solution.c` | Enhancement demo: filter by status (+ priority counts) |
+| `solution.c` | Enhancement demo: filter by status, priority counts, edit title, sort by id |
 
 ## Concepts
 
@@ -31,7 +31,7 @@ This lesson is intentionally a **combination** of earlier skills:
 - **Search:** linear find by id / title substring
 - **Sort:** insertion sort by priority (high first)
 - **Persistence:** one task per line — `id|status|priority|title`
-- **Validation:** reject empty titles and `|` characters that would break the file format
+- **Validation:** reject empty titles and `|` characters that would break the file format (enforced in `task_make` and the add UI)
 
 ## Build and run
 
@@ -106,8 +106,8 @@ Saved 1 task(s) to tasks.txt.
 
 1. **Filter by status:** Print only tasks matching a chosen status (see `solution.c`).
 2. **Priority counts:** Summarize how many tasks are low/medium/high (`solution.c` also demos this).
-3. **Edit title:** Add a menu action that changes a task’s title with the same safety checks as add.
-4. **Sort by id:** Add `store_sort_by_id` using `task_compare_id_asc`.
+3. **Edit title:** Add a menu action that changes a task’s title with the same safety checks as add (see `solution.c` for a helper demo).
+4. **Sort by id:** Add `store_sort_by_id` using `task_compare_id_asc` (implemented in `store.c`; `solution.c` calls it).
 
 ## What you should understand before continuing
 
@@ -119,4 +119,4 @@ Saved 1 task(s) to tasks.txt.
 
 ## Note on `solution.c`
 
-Work the enhancements in the main project if you can. `solution.c` is a complete alternate entry point that links `task.c`, `store.c`, and `util.c` to demonstrate **filter by status** and **priority counts** without modifying `main.c`.
+Work the enhancements in the main project if you can. `solution.c` is a complete alternate entry point that links `task.c`, `store.c`, and `util.c` to demonstrate **filter by status**, **priority counts**, **edit title**, and **sort by id** without modifying `main.c`.
