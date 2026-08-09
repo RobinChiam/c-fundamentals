@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export * from "./curriculum.js";
+
 export const HEALTH_SERVICE_NAME = "c-fundamentals-learning-app" as const;
 
 export const healthResponseSchema = z.object({
