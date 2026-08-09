@@ -1,16 +1,29 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import {
-  createHealthResponse,
-  healthResponseSchema,
-} from "@learning-app/shared";
+  createCurriculumService,
+  type CurriculumService,
+} from "./curriculum/curriculum-service.js";
+import { resolveDefaultRepositoryRoot } from "./curriculum/repository-root.js";
+import { registerCurriculumRoutes } from "./routes/curriculum.js";
+import { registerHealthRoutes } from "./routes/health.js";
 
-export async function buildApp(): Promise<FastifyInstance> {
+export interface BuildAppOptions {
+  curriculumService?: CurriculumService;
+  repositoryRoot?: string;
+}
+
+export async function buildApp(
+  options: BuildAppOptions = {},
+): Promise<FastifyInstance> {
   const app = Fastify({ logger: false });
+  const curriculumService =
+    options.curriculumService ??
+    createCurriculumService({
+      repositoryRoot: options.repositoryRoot ?? resolveDefaultRepositoryRoot(),
+    });
 
-  app.get("/api/health", async () => {
-    const response = createHealthResponse();
-    return healthResponseSchema.parse(response);
-  });
+  await registerHealthRoutes(app);
+  await registerCurriculumRoutes(app, curriculumService);
 
   return app;
 }
