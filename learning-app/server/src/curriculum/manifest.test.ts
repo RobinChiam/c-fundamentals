@@ -80,6 +80,35 @@ describe("curriculum manifest integrity", () => {
     ]);
   });
 
+  it("gives every lesson valid compile metadata", () => {
+    for (const lesson of CURRICULUM_MANIFEST) {
+      expect(lesson.compile.sourceFileIds.length).toBeGreaterThan(0);
+      expect(lesson.compile.linkFlags.every((flag) => flag === "-lm" || flag.length > 0)).toBe(
+        true,
+      );
+    }
+  });
+
+  it("uses primary + geometry and -lm for Lesson 12", () => {
+    const lesson = CURRICULUM_MANIFEST.find(
+      (entry) => entry.id === "header-files-and-multiple-source-files",
+    );
+    expect(lesson?.compile).toEqual({
+      sourceFileIds: ["primary", "geometry"],
+      linkFlags: ["-lm"],
+    });
+  });
+
+  it("uses primary + task + store + util for Lesson 14", () => {
+    const lesson = CURRICULUM_MANIFEST.find(
+      (entry) => entry.id === "intermediate-console-project",
+    );
+    expect(lesson?.compile).toEqual({
+      sourceFileIds: ["primary", "task", "store", "util"],
+      linkFlags: [],
+    });
+  });
+
   it("fails when a declared repository file is missing", async () => {
     const driftedManifest = structuredClone(CURRICULUM_MANIFEST);
     const arraysLesson = driftedManifest.find((lesson) => lesson.id === "arrays");

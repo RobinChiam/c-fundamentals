@@ -32,3 +32,6 @@ __pycache__/
 
 # Makefile output
 build/
+
+# Ignore Stat
+stat

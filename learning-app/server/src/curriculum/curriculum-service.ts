@@ -215,6 +215,105 @@ export async function validateManifestIntegrity(
       );
     }
   }
+
+  validateCompileMetadata(manifest);
+}
+
+const KNOWN_LINK_FLAGS = new Set(["-lm"]);
+const COMPILE_SOURCE_ROLES = new Set<ManifestLessonFileEntry["role"]>([
+  "primary",
+  "support",
+]);
+
+function validateCompileMetadata(manifest: ManifestLessonEntry[]): void {
+  for (const lesson of manifest) {
+    const compile = lesson.compile;
+    if (!compile) {
+      throw new CurriculumIntegrityError(
+        `Lesson ${lesson.id} is missing compile metadata`,
+      );
+    }
+
+    if (compile.sourceFileIds.length === 0) {
+      throw new CurriculumIntegrityError(
+        `Lesson ${lesson.id} must declare at least one compile source file`,
+      );
+    }
+
+    const filesById = new Map(lesson.files.map((file) => [file.id, file]));
+    const sourceIds = new Set<string>();
+
+    for (const sourceId of compile.sourceFileIds) {
+      if (sourceIds.has(sourceId)) {
+        throw new CurriculumIntegrityError(
+          `Lesson ${lesson.id} has duplicate compile source id: ${sourceId}`,
+        );
+      }
+      sourceIds.add(sourceId);
+
+      const file = filesById.get(sourceId);
+      if (!file) {
+        throw new CurriculumIntegrityError(
+          `Lesson ${lesson.id} compile source id does not exist: ${sourceId}`,
+        );
+      }
+
+      if (!COMPILE_SOURCE_ROLES.has(file.role)) {
+        throw new CurriculumIntegrityError(
+          `Lesson ${lesson.id} compile source ${sourceId} must be primary or support`,
+        );
+      }
+
+      if (file.role === "readme" || file.role === "solution" || file.role === "header") {
+        throw new CurriculumIntegrityError(
+          `Lesson ${lesson.id} compile source ${sourceId} has forbidden role ${file.role}`,
+        );
+      }
+    }
+
+    for (const linkFlag of compile.linkFlags) {
+      if (!KNOWN_LINK_FLAGS.has(linkFlag)) {
+        throw new CurriculumIntegrityError(
+          `Lesson ${lesson.id} has unknown link flag: ${linkFlag}`,
+        );
+      }
+    }
+  }
+
+  const lesson12 = manifest.find(
+    (entry) => entry.id === "header-files-and-multiple-source-files",
+  );
+  if (lesson12) {
+    expectCompileSpec(lesson12, ["primary", "geometry"], ["-lm"]);
+  }
+
+  const lesson14Entry = manifest.find(
+    (entry) => entry.id === "intermediate-console-project",
+  );
+  if (lesson14Entry) {
+    expectCompileSpec(
+      lesson14Entry,
+      ["primary", "task", "store", "util"],
+      [],
+    );
+  }
+}
+
+function expectCompileSpec(
+  lesson: ManifestLessonEntry,
+  sourceFileIds: string[],
+  linkFlags: string[],
+): void {
+  if (lesson.compile.sourceFileIds.join(",") !== sourceFileIds.join(",")) {
+    throw new CurriculumIntegrityError(
+      `Lesson ${lesson.id} compile sourceFileIds mismatch`,
+    );
+  }
+  if (lesson.compile.linkFlags.join(",") !== linkFlags.join(",")) {
+    throw new CurriculumIntegrityError(
+      `Lesson ${lesson.id} compile linkFlags mismatch`,
+    );
+  }
 }
 
 export function createCurriculumService(

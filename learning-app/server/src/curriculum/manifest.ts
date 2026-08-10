@@ -12,6 +12,11 @@ export interface ManifestLessonFileEntry {
   relativePath: string;
 }
 
+export interface ManifestCompileSpec {
+  sourceFileIds: string[];
+  linkFlags: string[];
+}
+
 export interface ManifestLessonEntry {
   id: string;
   lessonNumber: number;
@@ -20,6 +25,14 @@ export interface ManifestLessonEntry {
   difficulty: LessonDifficulty;
   directory: string;
   files: ManifestLessonFileEntry[];
+  compile: ManifestCompileSpec;
+}
+
+function standardCompileSpec(): ManifestCompileSpec {
+  return {
+    sourceFileIds: ["primary"],
+    linkFlags: [],
+  };
 }
 
 function standardLessonFiles(
@@ -60,6 +73,7 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
     difficulty: "Beginner (starter)",
     directory: "Basic IO",
     files: standardLessonFiles("Basic IO", "main.c"),
+    compile: standardCompileSpec(),
   },
   {
     id: "drawing-shapes",
@@ -69,6 +83,7 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
     difficulty: "Beginner (starter)",
     directory: "Drawing Shapes",
     files: standardLessonFiles("Drawing Shapes", "shapes.c"),
+    compile: standardCompileSpec(),
   },
   {
     id: "variables-and-data-types",
@@ -78,6 +93,7 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
     difficulty: "Beginner",
     directory: "Variables and Data Types",
     files: standardLessonFiles("Variables and Data Types", "variables.c"),
+    compile: standardCompileSpec(),
   },
   {
     id: "operators-and-expressions",
@@ -87,6 +103,7 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
     difficulty: "Beginner",
     directory: "Operators and Expressions",
     files: standardLessonFiles("Operators and Expressions", "operators.c"),
+    compile: standardCompileSpec(),
   },
   {
     id: "conditional-statements",
@@ -96,6 +113,7 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
     difficulty: "Beginner",
     directory: "Conditional Statements",
     files: standardLessonFiles("Conditional Statements", "conditions.c"),
+    compile: standardCompileSpec(),
   },
   {
     id: "loops-and-input-validation",
@@ -105,6 +123,7 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
     difficulty: "Beginner",
     directory: "Loops and Input Validation",
     files: standardLessonFiles("Loops and Input Validation", "loops.c"),
+    compile: standardCompileSpec(),
   },
   {
     id: "functions-and-scope",
@@ -114,6 +133,7 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
     difficulty: "Beginner–Intermediate",
     directory: "Functions and Scope",
     files: standardLessonFiles("Functions and Scope", "functions.c"),
+    compile: standardCompileSpec(),
   },
   {
     id: "arrays",
@@ -123,6 +143,7 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
     difficulty: "Intermediate",
     directory: "Arrays",
     files: standardLessonFiles("Arrays", "arrays.c"),
+    compile: standardCompileSpec(),
   },
   {
     id: "strings-and-character-handling",
@@ -135,6 +156,7 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
       "Strings and Character Handling",
       "strings.c",
     ),
+    compile: standardCompileSpec(),
   },
   {
     id: "pointers",
@@ -144,6 +166,7 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
     difficulty: "Intermediate",
     directory: "Pointers",
     files: standardLessonFiles("Pointers", "pointers.c"),
+    compile: standardCompileSpec(),
   },
   {
     id: "structures-and-enumerations",
@@ -153,6 +176,7 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
     difficulty: "Intermediate",
     directory: "Structures and Enumerations",
     files: standardLessonFiles("Structures and Enumerations", "structures.c"),
+    compile: standardCompileSpec(),
   },
   {
     id: "file-input-and-output",
@@ -162,6 +186,7 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
     difficulty: "Intermediate",
     directory: "File Input and Output",
     files: standardLessonFiles("File Input and Output", "files.c"),
+    compile: standardCompileSpec(),
   },
   {
     id: "dynamic-memory-allocation",
@@ -171,6 +196,7 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
     difficulty: "Intermediate",
     directory: "Dynamic Memory Allocation",
     files: standardLessonFiles("Dynamic Memory Allocation", "dynamic_memory.c"),
+    compile: standardCompileSpec(),
   },
   {
     id: "header-files-and-multiple-source-files",
@@ -217,6 +243,10 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
         relativePath: "Header Files and Multiple Source Files/solution.c",
       },
     ],
+    compile: {
+      sourceFileIds: ["primary", "geometry"],
+      linkFlags: ["-lm"],
+    },
   },
   {
     id: "searching-and-sorting",
@@ -226,6 +256,7 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
     difficulty: "Intermediate",
     directory: "Searching and Sorting",
     files: standardLessonFiles("Searching and Sorting", "search_sort.c"),
+    compile: standardCompileSpec(),
   },
   {
     id: "intermediate-console-project",
@@ -299,5 +330,9 @@ export const CURRICULUM_MANIFEST: ManifestLessonEntry[] = [
         relativePath: "Intermediate Console Project/solution.c",
       },
     ],
+    compile: {
+      sourceFileIds: ["primary", "task", "store", "util"],
+      linkFlags: [],
+    },
   },
 ];

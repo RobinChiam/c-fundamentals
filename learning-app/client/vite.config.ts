@@ -1,8 +1,31 @@
-import { defineConfig } from "vite";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+
+const clientDir = path.dirname(fileURLToPath(import.meta.url));
+const monacoDir = path.resolve(clientDir, "node_modules/monaco-editor");
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      "monaco-editor": monacoDir,
+    },
+  },
+  optimizeDeps: {
+    include: ["monaco-editor"],
+  },
+  worker: {
+    format: "es",
+    plugins: () => [react()],
+    rollupOptions: {
+      output: {
+        format: "es",
+      },
+    },
+  },
   server: {
     proxy: {
       "/api": {
@@ -13,6 +36,6 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
-    setupFiles: "./src/test-setup.ts",
+    setupFiles: "./src/test-setup.tsx",
   },
 });

@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { buildApp } from "./app.js";
 
-const DEFAULT_HOST = "0.0.0.0";
+export const DEFAULT_HOST = "127.0.0.1";
 const DEFAULT_PORT = 3001;
 
 export async function startServer(
