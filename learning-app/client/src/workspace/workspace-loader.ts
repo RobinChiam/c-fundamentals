@@ -1,7 +1,16 @@
 import type { LessonFileDescriptor } from "@learning-app/shared";
 import { getLessonFile } from "../api/curriculum-api";
+import {
+  PersistenceApiUnavailableError,
+  getLessonDrafts,
+} from "../api/persistence-api";
 import { createLessonWorkspace } from "./workspace-reducer";
-import type { EditableFileRole, EditableWorkspaceFile, LessonWorkspace } from "./workspace-types";
+import type { StaleDraftInfo } from "./draft-persistence-types";
+import type {
+  EditableFileRole,
+  EditableWorkspaceFile,
+  LessonWorkspace,
+} from "./workspace-types";
 
 const EDITABLE_ROLES = new Set<EditableFileRole>(["primary", "support", "header"]);
 
@@ -17,10 +26,15 @@ export function getEditableDescriptors(
   return files.filter((file) => isEditableRole(file.role));
 }
 
+export interface LoadedLessonWorkspace {
+  workspace: LessonWorkspace;
+  staleDrafts: StaleDraftInfo[];
+}
+
 export async function loadLessonWorkspace(
   lessonId: string,
   descriptors: LessonFileDescriptor[],
-): Promise<LessonWorkspace> {
+): Promise<LoadedLessonWorkspace> {
   const editableDescriptors = getEditableDescriptors(descriptors);
 
   if (editableDescriptors.length === 0) {
@@ -41,5 +55,47 @@ export async function loadLessonWorkspace(
     }),
   );
 
-  return createLessonWorkspace(lessonId, fileContents);
+  const workspace = createLessonWorkspace(lessonId, fileContents);
+  const staleDrafts: StaleDraftInfo[] = [];
+
+  try {
+    const draftsResponse = await getLessonDrafts(lessonId);
+
+    for (const savedDraft of draftsResponse.drafts) {
+      const file = workspace.files.find((entry) => entry.id === savedDraft.fileId);
+      if (!file) {
+        continue;
+      }
+
+      if (savedDraft.stale) {
+        staleDrafts.push({
+          fileId: savedDraft.fileId,
+          content: savedDraft.content,
+        });
+        continue;
+      }
+
+      file.draftContent = savedDraft.content;
+    }
+  } catch (error) {
+    if (error instanceof PersistenceApiUnavailableError) {
+      return {
+        workspace: {
+          ...workspace,
+          saveStatus: "persistence_unavailable",
+        },
+        staleDrafts: [],
+      };
+    }
+    throw error;
+  }
+
+  return {
+    workspace: {
+      ...workspace,
+      staleDrafts,
+      saveStatus: "saved",
+    },
+    staleDrafts,
+  };
 }

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export * from "./compiler.js";
 export * from "./curriculum.js";
+export * from "./persistence.js";
 export * from "./runner.js";
 
 export const HEALTH_SERVICE_NAME = "c-fundamentals-learning-app" as const;

@@ -1,11 +1,36 @@
 import { Link } from "react-router";
-import type { LessonSummary } from "@learning-app/shared";
+import type { LessonProgress, LessonSummary } from "@learning-app/shared";
+
+export type LessonDisplayStatus = "not_started" | "in_progress" | "completed";
+
+export function getLessonDisplayStatus(
+  lessonId: string,
+  progressByLessonId: Map<string, LessonProgress>,
+): LessonDisplayStatus {
+  const progress = progressByLessonId.get(lessonId);
+  if (!progress) {
+    return "not_started";
+  }
+  return progress.status;
+}
+
+export function formatLessonDisplayStatus(status: LessonDisplayStatus): string {
+  switch (status) {
+    case "not_started":
+      return "Not started";
+    case "in_progress":
+      return "In progress";
+    case "completed":
+      return "Completed";
+  }
+}
 
 interface LessonCardProps {
   lesson: LessonSummary;
+  status: LessonDisplayStatus;
 }
 
-export function LessonCard({ lesson }: LessonCardProps) {
+export function LessonCard({ lesson, status }: LessonCardProps) {
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-slate-300">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -22,6 +47,9 @@ export function LessonCard({ lesson }: LessonCardProps) {
             </Link>
           </h2>
           <p className="mt-1 text-sm text-slate-600">{lesson.difficulty}</p>
+          <p className="mt-2 text-sm font-medium text-slate-700">
+            {formatLessonDisplayStatus(status)}
+          </p>
         </div>
         <Link
           to={`/lessons/${lesson.id}`}

@@ -8,6 +8,12 @@ import {
   getLessonFile,
   listCurriculum,
 } from "../api/curriculum-api";
+import {
+  PersistenceApiError,
+  PersistenceApiUnavailableError,
+  updateLessonProgress,
+  visitLesson,
+} from "../api/persistence-api";
 import { ErrorState } from "../components/ErrorState";
 import { LoadingState } from "../components/LoadingState";
 import { MarkdownReader } from "../components/MarkdownReader";
@@ -23,12 +29,15 @@ type LessonPageState =
       lesson: LessonDetail;
       curriculum: LessonSummary[];
       readmeContent: string;
+      progressStatus: "in_progress" | "completed" | null;
+      progressError: string | null;
     };
 
 export function LessonPage() {
   const { lessonId = "" } = useParams();
   const [state, setState] = useState<LessonPageState>({ kind: "loading" });
   const [retryToken, setRetryToken] = useState(0);
+  const [progressUpdating, setProgressUpdating] = useState(false);
 
   const loadLesson = useCallback(async () => {
     if (!lessonId) {
@@ -51,11 +60,29 @@ export function LessonPage() {
 
       const readmeContent = await getLessonFile(lessonId, readme.id);
 
+      let progressStatus: "in_progress" | "completed" | null = null;
+      let progressError: string | null = null;
+
+      try {
+        const progress = await visitLesson(lessonId);
+        progressStatus = progress.status;
+      } catch (error) {
+        if (
+          !(error instanceof PersistenceApiUnavailableError) &&
+          !(error instanceof PersistenceApiError)
+        ) {
+          throw error;
+        }
+        progressError = "Progress tracking is unavailable";
+      }
+
       setState({
         kind: "ready",
         lesson,
         curriculum: curriculumResponse.lessons,
         readmeContent: readmeContent.content,
+        progressStatus,
+        progressError,
       });
     } catch (error) {
       if (error instanceof CurriculumApiNotFoundError) {
@@ -75,6 +102,31 @@ export function LessonPage() {
   useEffect(() => {
     void loadLesson();
   }, [loadLesson, retryToken]);
+
+  const handleProgressUpdate = async (
+    status: "in_progress" | "completed",
+  ) => {
+    if (state.kind !== "ready") {
+      return;
+    }
+
+    setProgressUpdating(true);
+    try {
+      const progress = await updateLessonProgress(state.lesson.id, status);
+      setState({
+        ...state,
+        progressStatus: progress.status,
+        progressError: null,
+      });
+    } catch {
+      setState({
+        ...state,
+        progressError: "Unable to update lesson progress",
+      });
+    } finally {
+      setProgressUpdating(false);
+    }
+  };
 
   if (state.kind === "loading") {
     return <LoadingState message="Loading lesson…" />;
@@ -118,6 +170,40 @@ export function LessonPage() {
           {state.lesson.title}
         </h1>
         <p className="mt-2 text-slate-600">{state.lesson.difficulty}</p>
+
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          {state.progressStatus === "completed" ? (
+            <>
+              <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium text-green-800">
+                Completed
+              </span>
+              <button
+                type="button"
+                disabled={progressUpdating}
+                onClick={() => {
+                  void handleProgressUpdate("in_progress");
+                }}
+                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Mark In Progress
+              </button>
+            </>
+          ) : (
+            <button
+              type="button"
+              disabled={progressUpdating}
+              onClick={() => {
+                void handleProgressUpdate("completed");
+              }}
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Mark Lesson Complete
+            </button>
+          )}
+          {state.progressError ? (
+            <p className="text-sm text-amber-700">{state.progressError}</p>
+          ) : null}
+        </div>
 
         <nav
           aria-label="Lesson navigation"

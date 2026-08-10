@@ -10,6 +10,7 @@ import { ErrorState } from "../ErrorState";
 import { LoadingState } from "../LoadingState";
 import { MonacoCodeEditor } from "./MonacoCodeEditor";
 import { MonacoDiffViewer } from "./MonacoDiffViewer";
+import { StaleDraftBanner } from "./StaleDraftBanner";
 import { WorkspaceTabs } from "./WorkspaceTabs";
 import { WorkspaceToolbar } from "./WorkspaceToolbar";
 import { RunPanel } from "../../runner/RunPanel";
@@ -62,6 +63,10 @@ export function CodeWorkspace({ lessonId, files }: CodeWorkspaceProps) {
     );
   }
 
+  const activeStaleDraft = workspace.staleDrafts.find(
+    (draft) => draft.fileId === activeFile.id,
+  );
+
   const handleResetWorkspace = () => {
     if (
       window.confirm(
@@ -84,9 +89,20 @@ export function CodeWorkspace({ lessonId, files }: CodeWorkspaceProps) {
     <section aria-label="Code workspace" className="mt-10">
       <h2 className="mb-4 text-xl font-semibold text-slate-900">Code workspace</h2>
 
+      {activeStaleDraft ? (
+        <StaleDraftBanner
+          fileName={activeFile.name}
+          onUse={() =>
+            actions.applyStaleDraft(activeStaleDraft.fileId, activeStaleDraft.content)
+          }
+          onDiscard={() => actions.discardStaleDraft(activeStaleDraft.fileId)}
+        />
+      ) : null}
+
       <WorkspaceToolbar
         workspace={workspace}
         activeFile={activeFile}
+        saveStatus={workspace.saveStatus}
         onResetFile={() => actions.resetFile(activeFile.id)}
         onResetWorkspace={handleResetWorkspace}
         onSetViewMode={actions.setViewMode}

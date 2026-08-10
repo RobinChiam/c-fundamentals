@@ -1,4 +1,6 @@
 import type { EditableWorkspaceFile, LessonWorkspace } from "../../workspace/workspace-types";
+import { getSaveStatusLabel } from "../../workspace/draft-persistence-types";
+import type { DraftSaveStatus } from "../../workspace/draft-persistence-types";
 import {
   countDirtyFiles,
   getActiveFile,
@@ -9,6 +11,7 @@ import {
 interface WorkspaceToolbarProps {
   workspace: LessonWorkspace;
   activeFile: EditableWorkspaceFile;
+  saveStatus: DraftSaveStatus;
   onResetFile: () => void;
   onResetWorkspace: () => void;
   onSetViewMode: (mode: "edit" | "compare") => void;
@@ -18,6 +21,7 @@ interface WorkspaceToolbarProps {
 export function WorkspaceToolbar({
   workspace,
   activeFile,
+  saveStatus,
   onResetFile,
   onResetWorkspace,
   onSetViewMode,
@@ -37,9 +41,8 @@ export function WorkspaceToolbar({
               ? "1 modified file"
               : `${dirtyCount} modified files`}
         </p>
-        <p className="text-xs text-slate-500">
-          Drafts are session-only. Refreshing or restarting the app discards
-          unsaved edits.
+        <p className="text-xs text-slate-500" aria-live="polite">
+          Draft persistence: {getSaveStatusLabel(saveStatus)}
         </p>
       </div>
 

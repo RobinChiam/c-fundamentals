@@ -1,8 +1,9 @@
 import type { ReactElement } from "react";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as curriculumApi from "../../api/curriculum-api";
+import * as persistenceApi from "../../api/persistence-api";
 import { CodeWorkspace } from "./CodeWorkspace";
 import { WorkspaceProvider } from "../../workspace/WorkspaceProvider";
 import {
@@ -14,6 +15,25 @@ import {
 } from "../../test-fixtures/curriculum";
 
 vi.mock("../../api/curriculum-api");
+vi.mock("../../api/persistence-api");
+
+function mockPersistenceDefaults() {
+  vi.mocked(persistenceApi.getLessonDrafts).mockImplementation(
+    async (lessonId: string) => ({
+      lessonId,
+      drafts: [],
+    }),
+  );
+  vi.mocked(persistenceApi.saveLessonDraft).mockResolvedValue({
+    lessonId: "arrays",
+    fileId: "primary",
+    content: "draft",
+    updatedAt: "2026-01-01T00:00:00.000Z",
+    stale: false,
+  });
+  vi.mocked(persistenceApi.deleteLessonDraft).mockResolvedValue(undefined);
+  vi.mocked(persistenceApi.deleteLessonDrafts).mockResolvedValue(undefined);
+}
 
 vi.mock("../../api/compiler-api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../api/compiler-api")>();
@@ -85,6 +105,10 @@ function mockLessonFileResponses() {
 }
 
 describe("CodeWorkspace", () => {
+  beforeEach(() => {
+    mockPersistenceDefaults();
+  });
+
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
@@ -230,13 +254,13 @@ describe("CodeWorkspace", () => {
     expect(screen.getByText("No modified files")).toBeInTheDocument();
   });
 
-  it("renders the session-only draft notice", async () => {
+  it("shows draft persistence status", async () => {
     mockLessonFileResponses();
 
     renderWorkspace(<CodeWorkspace lessonId="arrays" files={mockArraysLesson.files} />);
 
     expect(
-      await screen.findByText(/Drafts are session-only/i),
+      await screen.findByText(/Draft persistence: Saved/i),
     ).toBeInTheDocument();
   });
 

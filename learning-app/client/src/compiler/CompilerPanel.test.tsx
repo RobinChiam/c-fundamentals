@@ -19,6 +19,8 @@ const workspace: LessonWorkspace = {
   lessonId: "arrays",
   activeFileId: "primary",
   viewMode: "edit",
+  saveStatus: "saved",
+  staleDrafts: [],
   files: [
     {
       id: "primary",

@@ -1,7 +1,8 @@
 import { cleanup, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as curriculumApi from "../api/curriculum-api";
+import * as persistenceApi from "../api/persistence-api";
 import { LessonPage } from "./LessonPage";
 import {
   mockArraysLesson,
@@ -14,6 +15,25 @@ import {
 import { renderWithRouter } from "../test-utils";
 
 vi.mock("../api/curriculum-api");
+vi.mock("../api/persistence-api");
+
+function mockPersistenceDefaults() {
+  vi.mocked(persistenceApi.visitLesson).mockImplementation(
+    async (lessonId: string) => ({
+      lessonId,
+      status: "in_progress",
+      lastVisitedAt: "2026-01-01T00:00:00.000Z",
+      completedAt: null,
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    }),
+  );
+  vi.mocked(persistenceApi.getLessonDrafts).mockImplementation(
+    async (lessonId: string) => ({
+      lessonId,
+      drafts: [],
+    }),
+  );
+}
 
 function mockArraysFiles() {
   vi.mocked(curriculumApi.getLessonFile).mockImplementation(
@@ -59,6 +79,10 @@ function mockMultiFileResponses(
 }
 
 describe("LessonPage", () => {
+  beforeEach(() => {
+    mockPersistenceDefaults();
+  });
+
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();

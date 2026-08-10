@@ -1,9 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as curriculumApi from "../api/curriculum-api";
-import {
-  getEditableDescriptors,
-  loadLessonWorkspace,
-} from "./workspace-loader";
+import * as persistenceApi from "../api/persistence-api";
+import { getEditableDescriptors, loadLessonWorkspace } from "./workspace-loader";
 import {
   mockArraysLesson,
   mockLesson12,
@@ -12,8 +10,18 @@ import {
 } from "../test-fixtures/curriculum";
 
 vi.mock("../api/curriculum-api");
+vi.mock("../api/persistence-api");
 
 describe("workspace loader", () => {
+  beforeEach(() => {
+    vi.mocked(persistenceApi.getLessonDrafts).mockImplementation(
+      async (lessonId: string) => ({
+        lessonId,
+        drafts: [],
+      }),
+    );
+  });
+
   it("loads primary, support, and header files", async () => {
     vi.mocked(curriculumApi.getLessonFile).mockImplementation(
       async (_lessonId, fileId) => ({
@@ -32,13 +40,13 @@ describe("workspace loader", () => {
       "geometry-header",
     ]);
 
-    const workspace = await loadLessonWorkspace(
+    const loaded = await loadLessonWorkspace(
       "header-files-and-multiple-source-files",
       mockLesson12.files,
     );
 
-    expect(workspace.activeFileId).toBe("primary");
-    expect(workspace.files.map((file) => file.id)).toEqual([
+    expect(loaded.workspace.activeFileId).toBe("primary");
+    expect(loaded.workspace.files.map((file) => file.id)).toEqual([
       "primary",
       "geometry",
       "geometry-header",
@@ -76,12 +84,12 @@ describe("workspace loader", () => {
       }),
     );
 
-    const workspace = await loadLessonWorkspace(
+    const loaded = await loadLessonWorkspace(
       "header-files-and-multiple-source-files",
       mockLesson12.files,
     );
 
-    expect(workspace.files.map((file) => file.name)).toEqual([
+    expect(loaded.workspace.files.map((file) => file.name)).toEqual([
       "main.c",
       "geometry.c",
       "geometry.h",
@@ -99,13 +107,13 @@ describe("workspace loader", () => {
       }),
     );
 
-    const workspace = await loadLessonWorkspace(
+    const loaded = await loadLessonWorkspace(
       "intermediate-console-project",
       mockLesson14.files,
     );
 
-    expect(workspace.files).toHaveLength(7);
-    expect(workspace.files.map((file) => file.name)).toEqual([
+    expect(loaded.workspace.files).toHaveLength(7);
+    expect(loaded.workspace.files.map((file) => file.name)).toEqual([
       "main.c",
       "task.c",
       "task.h",
@@ -116,13 +124,49 @@ describe("workspace loader", () => {
     ]);
   });
 
-  it("surfaces controlled failures when source loading fails", async () => {
-    vi.mocked(curriculumApi.getLessonFile).mockRejectedValue(
-      new curriculumApi.CurriculumApiError("boom"),
+  it("hydrates non-stale saved drafts", async () => {
+    vi.mocked(curriculumApi.getLessonFile).mockResolvedValue(
+      mockPrimarySourceContent,
     );
+    vi.mocked(persistenceApi.getLessonDrafts).mockResolvedValue({
+      lessonId: "arrays",
+      drafts: [
+        {
+          lessonId: "arrays",
+          fileId: "primary",
+          content: "saved draft",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          stale: false,
+        },
+      ],
+    });
 
-    await expect(
-      loadLessonWorkspace("arrays", mockArraysLesson.files),
-    ).rejects.toThrow();
+    const loaded = await loadLessonWorkspace("arrays", mockArraysLesson.files);
+    expect(loaded.workspace.files[0]?.draftContent).toBe("saved draft");
+    expect(loaded.staleDrafts).toHaveLength(0);
+  });
+
+  it("returns stale drafts without auto applying them", async () => {
+    vi.mocked(curriculumApi.getLessonFile).mockResolvedValue(
+      mockPrimarySourceContent,
+    );
+    vi.mocked(persistenceApi.getLessonDrafts).mockResolvedValue({
+      lessonId: "arrays",
+      drafts: [
+        {
+          lessonId: "arrays",
+          fileId: "primary",
+          content: "old draft",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+          stale: true,
+        },
+      ],
+    });
+
+    const loaded = await loadLessonWorkspace("arrays", mockArraysLesson.files);
+    expect(loaded.workspace.files[0]?.draftContent).toBe(
+      mockPrimarySourceContent.content,
+    );
+    expect(loaded.staleDrafts).toHaveLength(1);
   });
 });

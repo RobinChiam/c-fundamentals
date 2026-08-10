@@ -109,6 +109,97 @@ export function workspaceReducer(
       };
     }
 
+    case "SET_SAVE_STATUS": {
+      const entry = state.lessons[action.lessonId];
+      if (!entry || entry.status !== "ready") {
+        return state;
+      }
+
+      return {
+        ...state,
+        lessons: {
+          ...state.lessons,
+          [action.lessonId]: {
+            status: "ready",
+            workspace: {
+              ...entry.workspace,
+              saveStatus: action.saveStatus,
+            },
+          },
+        },
+      };
+    }
+
+    case "SET_STALE_DRAFTS": {
+      const entry = state.lessons[action.lessonId];
+      if (!entry || entry.status !== "ready") {
+        return state;
+      }
+
+      return {
+        ...state,
+        lessons: {
+          ...state.lessons,
+          [action.lessonId]: {
+            status: "ready",
+            workspace: {
+              ...entry.workspace,
+              staleDrafts: action.staleDrafts,
+            },
+          },
+        },
+      };
+    }
+
+    case "APPLY_STALE_DRAFT": {
+      const entry = state.lessons[action.lessonId];
+      if (!entry || entry.status !== "ready") {
+        return state;
+      }
+
+      return {
+        ...state,
+        lessons: {
+          ...state.lessons,
+          [action.lessonId]: {
+            status: "ready",
+            workspace: updateWorkspace(entry.workspace, (workspace) => ({
+              ...updateFile(workspace, action.fileId, (file) => ({
+                ...file,
+                draftContent: action.content,
+              })),
+              staleDrafts: workspace.staleDrafts.filter(
+                (draft) => draft.fileId !== action.fileId,
+              ),
+            })),
+          },
+        },
+      };
+    }
+
+    case "DISCARD_STALE_DRAFT": {
+      const entry = state.lessons[action.lessonId];
+      if (!entry || entry.status !== "ready") {
+        return state;
+      }
+
+      return {
+        ...state,
+        lessons: {
+          ...state.lessons,
+          [action.lessonId]: {
+            status: "ready",
+            workspace: updateWorkspace(entry.workspace, (workspace) => ({
+              ...workspace,
+              staleDrafts: workspace.staleDrafts.filter(
+                (draft) => draft.fileId !== action.fileId,
+              ),
+            })),
+          },
+        },
+      };
+    }
+
     case "RESET_FILE": {
       const entry = state.lessons[action.lessonId];
       if (!entry || entry.status !== "ready") {
@@ -196,5 +287,7 @@ export function createLessonWorkspace(
     activeFileId: primaryFile.id,
     viewMode: "edit",
     files,
+    saveStatus: "saved",
+    staleDrafts: [],
   };
 }

@@ -7,6 +7,12 @@ import { mockCurriculumResponse } from "../test-fixtures/curriculum";
 import { renderWithRouter } from "../test-utils";
 
 vi.mock("../api/curriculum-api");
+vi.mock("../api/persistence-api", () => ({
+  getLearningState: vi.fn().mockResolvedValue({
+    lastLessonId: null,
+    lessons: [],
+  }),
+}));
 
 describe("CurriculumPage", () => {
   afterEach(() => {

@@ -11,6 +11,10 @@ import type { LessonFileDescriptor } from "@learning-app/shared";
 import { CurriculumApiError } from "../api/curriculum-api";
 import { loadLessonWorkspace } from "./workspace-loader";
 import {
+  getFileOriginalContent,
+  useDraftPersistence,
+} from "./use-draft-persistence";
+import {
   initialWorkspaceStoreState,
   workspaceReducer,
 } from "./workspace-reducer";
@@ -32,6 +36,14 @@ interface WorkspaceContextValue {
     lessonId: string,
     descriptors: LessonFileDescriptor[],
   ) => void;
+  scheduleDraftSave: (
+    lessonId: string,
+    fileId: string,
+    content: string,
+    originalContent: string,
+  ) => void;
+  deletePersistedDraft: (lessonId: string, fileId: string) => Promise<void>;
+  deleteAllPersistedDrafts: (lessonId: string) => Promise<void>;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null);
@@ -41,14 +53,16 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     workspaceReducer,
     initialWorkspaceStoreState,
   );
+  const { scheduleDraftSave, deletePersistedDraft, deleteAllPersistedDrafts } =
+    useDraftPersistence(dispatch);
 
   const loadWorkspace = useCallback(
     async (lessonId: string, descriptors: LessonFileDescriptor[]) => {
       dispatch({ type: "START_LOAD", lessonId });
 
       try {
-        const workspace = await loadLessonWorkspace(lessonId, descriptors);
-        dispatch({ type: "LOAD_SUCCESS", lessonId, workspace });
+        const loaded = await loadLessonWorkspace(lessonId, descriptors);
+        dispatch({ type: "LOAD_SUCCESS", lessonId, workspace: loaded.workspace });
       } catch {
         dispatch({
           type: "LOAD_FAILURE",
@@ -89,8 +103,18 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       dispatch,
       ensureWorkspaceLoaded,
       retryWorkspaceLoad,
+      scheduleDraftSave,
+      deletePersistedDraft,
+      deleteAllPersistedDrafts,
     }),
-    [state, ensureWorkspaceLoaded, retryWorkspaceLoad],
+    [
+      state,
+      ensureWorkspaceLoaded,
+      retryWorkspaceLoad,
+      scheduleDraftSave,
+      deletePersistedDraft,
+      deleteAllPersistedDrafts,
+    ],
   );
 
   return (
@@ -126,18 +150,81 @@ export function useLessonWorkspaceEntry(
 }
 
 export function useLessonWorkspaceActions(lessonId: string) {
-  const { dispatch } = useWorkspaceContext();
+  const {
+    dispatch,
+    state,
+    scheduleDraftSave,
+    deletePersistedDraft,
+    deleteAllPersistedDrafts,
+  } = useWorkspaceContext();
+
+  const updateDraft = useCallback(
+    (fileId: string, content: string) => {
+      dispatch({ type: "UPDATE_DRAFT", lessonId, fileId, content });
+
+      const entry = state.lessons[lessonId];
+      if (entry?.status !== "ready") {
+        return;
+      }
+
+      const originalContent = getFileOriginalContent(entry.workspace, fileId);
+      if (originalContent === undefined) {
+        return;
+      }
+
+      scheduleDraftSave(lessonId, fileId, content, originalContent);
+    },
+    [dispatch, lessonId, scheduleDraftSave, state.lessons],
+  );
+
+  const resetFile = useCallback(
+    (fileId: string) => {
+      dispatch({ type: "RESET_FILE", lessonId, fileId });
+      void deletePersistedDraft(lessonId, fileId);
+    },
+    [deletePersistedDraft, dispatch, lessonId],
+  );
+
+  const resetWorkspace = useCallback(() => {
+    dispatch({ type: "RESET_WORKSPACE", lessonId });
+    void deleteAllPersistedDrafts(lessonId);
+  }, [deleteAllPersistedDrafts, dispatch, lessonId]);
+
+  const applyStaleDraft = useCallback(
+    (fileId: string, content: string) => {
+      dispatch({ type: "APPLY_STALE_DRAFT", lessonId, fileId, content });
+
+      const entry = state.lessons[lessonId];
+      const originalContent =
+        entry?.status === "ready"
+          ? getFileOriginalContent(entry.workspace, fileId)
+          : undefined;
+
+      if (originalContent !== undefined) {
+        scheduleDraftSave(lessonId, fileId, content, originalContent);
+      }
+    },
+    [dispatch, lessonId, scheduleDraftSave, state.lessons],
+  );
+
+  const discardStaleDraft = useCallback(
+    (fileId: string) => {
+      dispatch({ type: "DISCARD_STALE_DRAFT", lessonId, fileId });
+      void deletePersistedDraft(lessonId, fileId);
+    },
+    [deletePersistedDraft, dispatch, lessonId],
+  );
 
   return {
     selectFile: (fileId: string) =>
       dispatch({ type: "SELECT_FILE", lessonId, fileId }),
-    updateDraft: (fileId: string, content: string) =>
-      dispatch({ type: "UPDATE_DRAFT", lessonId, fileId, content }),
-    resetFile: (fileId: string) =>
-      dispatch({ type: "RESET_FILE", lessonId, fileId }),
-    resetWorkspace: () => dispatch({ type: "RESET_WORKSPACE", lessonId }),
+    updateDraft,
+    resetFile,
+    resetWorkspace,
     setViewMode: (viewMode: WorkspaceViewMode) =>
       dispatch({ type: "SET_VIEW_MODE", lessonId, viewMode }),
+    applyStaleDraft,
+    discardStaleDraft,
   };
 }
 
