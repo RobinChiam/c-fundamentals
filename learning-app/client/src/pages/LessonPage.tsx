@@ -260,6 +260,62 @@ export function LessonPage() {
           </Link>
         </section>
       ) : null}
+      {state.lesson.id === "functions-and-scope" ? (
+        <section className="my-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <h2 className="text-lg font-semibold text-slate-900">Explore function calls</h2>
+          <p className="mt-1 text-sm text-slate-700">
+            Step through pass-by-value and recursive factorial with conceptual call frames.
+          </p>
+          <Link
+            to="/lessons/functions-and-scope/visualize"
+            className="mt-3 inline-flex rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          >
+            Open Visualizer
+          </Link>
+        </section>
+      ) : null}
+      {state.lesson.id === "pointers" ? (
+        <section className="my-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <h2 className="text-lg font-semibold text-slate-900">Explore pointers</h2>
+          <p className="mt-1 text-sm text-slate-700">
+            Step through address-of, dereference, swap, array walks, and NULL safety.
+          </p>
+          <Link
+            to="/lessons/pointers/visualize"
+            className="mt-3 inline-flex rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          >
+            Open Visualizer
+          </Link>
+        </section>
+      ) : null}
+      {state.lesson.id === "dynamic-memory-allocation" ? (
+        <section className="my-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <h2 className="text-lg font-semibold text-slate-900">Explore dynamic memory</h2>
+          <p className="mt-1 text-sm text-slate-700">
+            Step through malloc, calloc, free, realloc, and ownership pitfalls.
+          </p>
+          <Link
+            to="/lessons/dynamic-memory-allocation/visualize"
+            className="mt-3 inline-flex rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          >
+            Open Visualizer
+          </Link>
+        </section>
+      ) : null}
+      {state.lesson.id === "loops-and-input-validation" ? (
+        <section className="my-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <h2 className="text-lg font-semibold text-slate-900">Explore control flow</h2>
+          <p className="mt-1 text-sm text-slate-700">
+            Step through for, while, do-while, continue, and off-by-one loops.
+          </p>
+          <Link
+            to="/lessons/loops-and-input-validation/visualize"
+            className="mt-3 inline-flex rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          >
+            Open Visualizer
+          </Link>
+        </section>
+      ) : null}
       <PracticeLabsSection lessonId={state.lesson.id} labs={state.labs} />
       <CodeWorkspace lessonId={state.lesson.id} files={state.lesson.files} />
     </article>

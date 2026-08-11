@@ -290,6 +290,36 @@ describe("LessonPage", () => {
     ).toHaveAttribute("href", "/lessons/searching-and-sorting/visualize");
   });
 
+  it.each([
+    ["functions-and-scope", "/lessons/functions-and-scope/visualize"],
+    ["pointers", "/lessons/pointers/visualize"],
+    ["dynamic-memory-allocation", "/lessons/dynamic-memory-allocation/visualize"],
+    ["loops-and-input-validation", "/lessons/loops-and-input-validation/visualize"],
+  ] as const)("links to visualizer for %s lesson", async (lessonId, href) => {
+    vi.mocked(curriculumApi.listCurriculum).mockResolvedValue(mockCurriculumResponse);
+    vi.mocked(curriculumApi.getLesson).mockResolvedValue({
+      ...mockArraysLesson,
+      id: lessonId,
+      title: lessonId,
+    });
+    vi.mocked(curriculumApi.getLessonFile).mockImplementation(async (_id, fileId) => {
+      if (fileId === "readme") {
+        return { ...mockReadmeContent, lessonId };
+      }
+      return { ...mockPrimarySourceContent, lessonId };
+    });
+
+    renderWithRouter(<LessonPage />, {
+      route: `/lessons/${lessonId}`,
+      path: "/lessons/:lessonId",
+    });
+
+    expect(await screen.findByRole("link", { name: "Open Visualizer" })).toHaveAttribute(
+      "href",
+      href,
+    );
+  });
+
   it("shows a retryable lesson load failure", async () => {
     const user = userEvent.setup();
     vi.mocked(curriculumApi.listCurriculum)
