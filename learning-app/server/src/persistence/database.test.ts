@@ -38,9 +38,13 @@ describe("database and migrations", () => {
 
     expect(tables.map((row) => row.name)).toEqual([
       "app_state",
+      "lab_attempts",
+      "lab_drafts",
+      "lab_state",
       "lesson_drafts",
       "lesson_progress",
       "schema_migrations",
+      "sqlite_sequence",
     ]);
   });
 
@@ -54,6 +58,7 @@ describe("database and migrations", () => {
 
     expect(rows).toEqual([
       { version: 1, name: "001_initial_persistence" },
+      { version: 2, name: "002_labs" },
     ]);
   });
 
@@ -69,7 +74,7 @@ describe("database and migrations", () => {
     });
 
     const versions = getAppliedMigrationVersions(reopened.db);
-    expect(versions).toEqual([1]);
+    expect(versions).toEqual([1, 2]);
   });
 
   it("unsupported future migration version handled safely", () => {
@@ -132,8 +137,8 @@ describe("migration rollback", () => {
   it("migration transaction rolls back on failure", () => {
     const temp = createTempDatabase();
     const failingMigration = {
-      version: 2,
-      name: "002_should_fail",
+      version: 3,
+      name: "003_should_fail",
       up(db: Database.Database) {
         db.exec("CREATE TABLE migration_fail_marker (id INTEGER PRIMARY KEY)");
         throw new Error("forced migration failure");
@@ -150,7 +155,7 @@ describe("migration rollback", () => {
       )
       .get();
     expect(markerExists).toBeUndefined();
-    expect(getAppliedMigrationVersions(temp.db)).toEqual([1]);
+    expect(getAppliedMigrationVersions(temp.db)).toEqual([1, 2]);
     temp.cleanup();
   });
 });

@@ -124,4 +124,14 @@ describe("curriculum routes", () => {
 
     expect(response.statusCode).toBe(404);
   });
+
+  it("GET /api/lessons/arrays/files/solution returns 403", async () => {
+    const app = await appPromise;
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/lessons/arrays/files/solution",
+    });
+
+    expect(response.statusCode).toBe(403);
+  });
 });

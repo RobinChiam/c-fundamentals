@@ -39,6 +39,50 @@ export const MIGRATIONS: Migration[] = [
       `);
     },
   },
+  {
+    version: 2,
+    name: "002_labs",
+    up(db) {
+      db.exec(`
+        CREATE TABLE lab_state (
+          lab_id TEXT PRIMARY KEY,
+          started_at TEXT NOT NULL,
+          hints_revealed INTEGER NOT NULL DEFAULT 0,
+          solution_revealed_at TEXT,
+          completed_at TEXT,
+          last_attempt_at TEXT,
+          updated_at TEXT NOT NULL
+        );
+
+        CREATE TABLE lab_attempts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          lab_id TEXT NOT NULL,
+          outcome TEXT NOT NULL CHECK (
+            outcome IN (
+              'passed',
+              'failed',
+              'compile_error',
+              'runtime_error',
+              'timeout',
+              'output_limit'
+            )
+          ),
+          passed_tests INTEGER NOT NULL,
+          total_tests INTEGER NOT NULL,
+          created_at TEXT NOT NULL
+        );
+
+        CREATE TABLE lab_drafts (
+          lab_id TEXT NOT NULL,
+          file_id TEXT NOT NULL,
+          content TEXT NOT NULL,
+          base_revision INTEGER NOT NULL,
+          updated_at TEXT NOT NULL,
+          PRIMARY KEY (lab_id, file_id)
+        );
+      `);
+    },
+  },
 ];
 
 export const KNOWN_MIGRATION_VERSION = Math.max(

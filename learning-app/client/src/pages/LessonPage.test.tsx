@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as curriculumApi from "../api/curriculum-api";
 import * as persistenceApi from "../api/persistence-api";
+import * as labsApi from "../api/labs-api";
 import { LessonPage } from "./LessonPage";
 import {
   mockArraysLesson,
@@ -16,6 +17,7 @@ import { renderWithRouter } from "../test-utils";
 
 vi.mock("../api/curriculum-api");
 vi.mock("../api/persistence-api");
+vi.mock("../api/labs-api");
 
 function mockPersistenceDefaults() {
   vi.mocked(persistenceApi.visitLesson).mockImplementation(
@@ -81,6 +83,7 @@ function mockMultiFileResponses(
 describe("LessonPage", () => {
   beforeEach(() => {
     mockPersistenceDefaults();
+    vi.mocked(labsApi.listLessonLabs).mockResolvedValue([]);
   });
 
   afterEach(() => {

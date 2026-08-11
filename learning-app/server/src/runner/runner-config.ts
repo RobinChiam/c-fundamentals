@@ -22,8 +22,10 @@ export const CONTAINER_PROGRAM_PATH = "/workspace/program";
 export const SANDBOX_EXECUTABLE_NAME = "program";
 
 export const TEMP_RUN_WORKSPACE_PREFIX = "c-fundamentals-run-";
+export const TEMP_LAB_WORKSPACE_PREFIX = "c-fundamentals-lab-";
 export const COMPILE_CONTAINER_PREFIX = "cfund-compile-";
 export const RUN_CONTAINER_PREFIX = "cfund-run-";
+export const LAB_CONTAINER_PREFIX = "cfund-lab-";
 
 export const RUN_BODY_LIMIT_BYTES =
   512 * 1024 + MAX_STDIN_BYTES + 64 * 1024;

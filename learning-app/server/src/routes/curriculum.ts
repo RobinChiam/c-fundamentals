@@ -39,6 +39,14 @@ export async function registerCurriculumRoutes(
     "/api/lessons/:lessonId/files/:fileId",
     async (request, reply) => {
       try {
+        const lesson = curriculumService.getLessonDetail(request.params.lessonId);
+        const file = lesson.files.find(
+          (entry) => entry.id === request.params.fileId,
+        );
+        if (file?.role === "solution") {
+          return reply.status(403).send({ error: "Solution files require deliberate reveal" });
+        }
+
         const fileContent = await curriculumService.getLessonFileContent(
           request.params.lessonId,
           request.params.fileId,

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export * from "./compiler.js";
 export * from "./curriculum.js";
+export * from "./labs.js";
 export * from "./persistence.js";
 export * from "./runner.js";
 

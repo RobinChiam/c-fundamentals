@@ -25,12 +25,16 @@ import {
   createRunnerService,
   type RunnerService,
 } from "./runner/runner-service.js";
+import { createLabService, type LabService } from "./labs/lab-service.js";
+import { registerLabRoutes } from "./routes/labs.js";
+import { validateLabRegistry } from "./labs/validate-lab-registry.js";
 
 export interface BuildAppOptions {
   curriculumService?: CurriculumService;
   compilerService?: CompilerService;
   runnerService?: RunnerService;
   persistenceService?: PersistenceService;
+  labService?: LabService;
   repositoryRoot?: string;
   databasePath?: string;
   skipPersistence?: boolean;
@@ -52,12 +56,14 @@ export async function buildApp(
 
   let persistenceService = options.persistenceService;
   let ownedPersistence: PersistenceService | undefined;
+  let ownedDatabase: ReturnType<typeof createDatabase> | undefined;
 
   if (!persistenceService && !options.skipPersistence) {
     try {
       const database = createDatabase({
         databasePath: options.databasePath ?? resolveDefaultDatabasePath(),
       });
+      ownedDatabase = database;
       ownedPersistence = createPersistenceService({
         db: database.db,
         curriculumService,
@@ -80,6 +86,16 @@ export async function buildApp(
     persistenceService = createUnavailablePersistenceService();
   }
 
+  validateLabRegistry();
+
+  const labService =
+    options.labService ??
+    createLabService({
+      curriculumService,
+      persistenceService,
+      db: ownedDatabase?.db,
+    });
+
   app.addHook("onClose", async () => {
     persistenceService?.close();
   });
@@ -89,6 +105,7 @@ export async function buildApp(
   await registerCompilerRoutes(app, compilerService);
   await registerRunnerRoutes(app, runnerService);
   await registerPersistenceRoutes(app, persistenceService);
+  await registerLabRoutes(app, labService);
 
   return app;
 }

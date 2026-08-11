@@ -18,7 +18,10 @@ import { ErrorState } from "../components/ErrorState";
 import { LoadingState } from "../components/LoadingState";
 import { MarkdownReader } from "../components/MarkdownReader";
 import { CodeWorkspace } from "../components/CodeWorkspace/CodeWorkspace";
+import { PracticeLabsSection } from "../components/PracticeLabsSection";
 import { getAdjacentLessons } from "../lib/curriculum-navigation";
+import { listLessonLabs } from "../api/labs-api";
+import type { LabSummary } from "@learning-app/shared";
 
 type LessonPageState =
   | { kind: "loading" }
@@ -31,6 +34,7 @@ type LessonPageState =
       readmeContent: string;
       progressStatus: "in_progress" | "completed" | null;
       progressError: string | null;
+      labs: LabSummary[];
     };
 
 export function LessonPage() {
@@ -62,6 +66,7 @@ export function LessonPage() {
 
       let progressStatus: "in_progress" | "completed" | null = null;
       let progressError: string | null = null;
+      let labs: LabSummary[] = [];
 
       try {
         const progress = await visitLesson(lessonId);
@@ -76,6 +81,12 @@ export function LessonPage() {
         progressError = "Progress tracking is unavailable";
       }
 
+      try {
+        labs = await listLessonLabs(lessonId);
+      } catch {
+        labs = [];
+      }
+
       setState({
         kind: "ready",
         lesson,
@@ -83,6 +94,7 @@ export function LessonPage() {
         readmeContent: readmeContent.content,
         progressStatus,
         progressError,
+        labs,
       });
     } catch (error) {
       if (error instanceof CurriculumApiNotFoundError) {
@@ -233,6 +245,7 @@ export function LessonPage() {
       </header>
 
       <MarkdownReader content={state.readmeContent} demoteHeadings />
+      <PracticeLabsSection lessonId={state.lesson.id} labs={state.labs} />
       <CodeWorkspace lessonId={state.lesson.id} files={state.lesson.files} />
     </article>
   );
