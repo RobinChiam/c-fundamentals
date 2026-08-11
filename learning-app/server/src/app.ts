@@ -7,6 +7,7 @@ import {
   createCurriculumService,
   type CurriculumService,
 } from "./curriculum/curriculum-service.js";
+import { CURRICULUM_MANIFEST } from "./curriculum/manifest.js";
 import { resolveDefaultRepositoryRoot } from "./curriculum/repository-root.js";
 import { createDatabase } from "./persistence/database.js";
 import { resolveDefaultDatabasePath } from "./persistence/database-path.js";
@@ -21,6 +22,12 @@ import { registerCurriculumRoutes } from "./routes/curriculum.js";
 import { registerHealthRoutes } from "./routes/health.js";
 import { registerPersistenceRoutes } from "./routes/persistence.js";
 import { registerRunnerRoutes } from "./routes/runner.js";
+import { registerArchitectureRoutes } from "./routes/architecture.js";
+import {
+  createArchitectureService,
+  type ArchitectureService,
+} from "./architecture/architecture-service.js";
+import { validateArchitectureDefinitions } from "./architecture/architecture-integrity.js";
 import {
   createRunnerService,
   type RunnerService,
@@ -35,9 +42,11 @@ export interface BuildAppOptions {
   runnerService?: RunnerService;
   persistenceService?: PersistenceService;
   labService?: LabService;
+  architectureService?: ArchitectureService;
   repositoryRoot?: string;
   databasePath?: string;
   skipPersistence?: boolean;
+  skipArchitectureValidation?: boolean;
 }
 
 export async function buildApp(
@@ -88,6 +97,18 @@ export async function buildApp(
 
   validateLabRegistry();
 
+  if (!options.skipArchitectureValidation) {
+    await validateArchitectureDefinitions(
+      CURRICULUM_MANIFEST,
+      undefined,
+      curriculumService,
+    );
+  }
+
+  const architectureService =
+    options.architectureService ??
+    createArchitectureService({ curriculumService });
+
   const labService =
     options.labService ??
     createLabService({
@@ -106,6 +127,7 @@ export async function buildApp(
   await registerRunnerRoutes(app, runnerService);
   await registerPersistenceRoutes(app, persistenceService);
   await registerLabRoutes(app, labService);
+  await registerArchitectureRoutes(app, architectureService);
 
   return app;
 }

@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+export * from "./architecture.js";
 export * from "./compiler.js";
 export * from "./curriculum.js";
 export * from "./labs.js";

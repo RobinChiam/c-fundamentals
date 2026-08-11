@@ -6,6 +6,7 @@ import { LessonPage } from "./pages/LessonPage";
 import { ControlFlowVisualizerPage } from "./pages/ControlFlowVisualizerPage";
 import { DynamicMemoryVisualizerPage } from "./pages/DynamicMemoryVisualizerPage";
 import { FunctionCallVisualizerPage } from "./pages/FunctionCallVisualizerPage";
+import { LessonArchitecturePage } from "./pages/LessonArchitecturePage";
 import { PointerVisualizerPage } from "./pages/PointerVisualizerPage";
 import { SearchingSortingVisualizerPage } from "./pages/SearchingSortingVisualizerPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
@@ -42,6 +43,10 @@ export function App() {
             <Route
               path="lessons/loops-and-input-validation/visualize"
               element={<ControlFlowVisualizerPage />}
+            />
+            <Route
+              path="lessons/:lessonId/architecture"
+              element={<LessonArchitecturePage />}
             />
             <Route path="*" element={<NotFoundPage />} />
           </Route>

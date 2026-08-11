@@ -316,6 +316,36 @@ export function LessonPage() {
           </Link>
         </section>
       ) : null}
+      {state.lesson.id === "header-files-and-multiple-source-files" ? (
+        <section className="my-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <h2 className="text-lg font-semibold text-slate-900">Explore architecture</h2>
+          <p className="mt-1 text-sm text-slate-700">
+            See how main.c, geometry.c, and geometry.h form translation units and link
+            into an executable.
+          </p>
+          <Link
+            to="/lessons/header-files-and-multiple-source-files/architecture"
+            className="mt-3 inline-flex rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          >
+            Explore Architecture
+          </Link>
+        </section>
+      ) : null}
+      {state.lesson.id === "intermediate-console-project" ? (
+        <section className="my-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <h2 className="text-lg font-semibold text-slate-900">Explore capstone architecture</h2>
+          <p className="mt-1 text-sm text-slate-700">
+            Walk through module responsibilities, ownership, build pipeline, and runtime
+            workflows for the task tracker.
+          </p>
+          <Link
+            to="/lessons/intermediate-console-project/architecture"
+            className="mt-3 inline-flex rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          >
+            Explore Architecture
+          </Link>
+        </section>
+      ) : null}
       <PracticeLabsSection lessonId={state.lesson.id} labs={state.labs} />
       <CodeWorkspace lessonId={state.lesson.id} files={state.lesson.files} />
     </article>
