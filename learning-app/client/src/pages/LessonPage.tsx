@@ -245,6 +245,21 @@ export function LessonPage() {
       </header>
 
       <MarkdownReader content={state.readmeContent} demoteHeadings />
+      {state.lesson.id === "searching-and-sorting" ? (
+        <section className="my-6 rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <h2 className="text-lg font-semibold text-slate-900">Explore algorithms</h2>
+          <p className="mt-1 text-sm text-slate-700">
+            Step through linear search, binary search, bubble sort, and insertion sort
+            with the interactive visualizer.
+          </p>
+          <Link
+            to="/lessons/searching-and-sorting/visualize"
+            className="mt-3 inline-flex rounded-md border border-blue-600 bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+          >
+            Open Visualizer
+          </Link>
+        </section>
+      ) : null}
       <PracticeLabsSection lessonId={state.lesson.id} labs={state.labs} />
       <CodeWorkspace lessonId={state.lesson.id} files={state.lesson.files} />
     </article>

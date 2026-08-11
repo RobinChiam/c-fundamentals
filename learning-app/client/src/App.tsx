@@ -3,6 +3,7 @@ import { AppShell } from "./components/AppShell";
 import { CurriculumPage } from "./pages/CurriculumPage";
 import { LabPage } from "./pages/LabPage";
 import { LessonPage } from "./pages/LessonPage";
+import { SearchingSortingVisualizerPage } from "./pages/SearchingSortingVisualizerPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { WorkspaceProvider } from "./workspace/WorkspaceProvider";
 
@@ -17,6 +18,10 @@ export function App() {
             <Route
               path="lessons/:lessonId/labs/:labId"
               element={<LabPage />}
+            />
+            <Route
+              path="lessons/searching-and-sorting/visualize"
+              element={<SearchingSortingVisualizerPage />}
             />
             <Route path="*" element={<NotFoundPage />} />
           </Route>

@@ -264,6 +264,32 @@ describe("LessonPage", () => {
     ).toHaveAttribute("href", "/");
   });
 
+  it("links to visualizer for searching-and-sorting lesson", async () => {
+    vi.mocked(curriculumApi.listCurriculum).mockResolvedValue(mockCurriculumResponse);
+    vi.mocked(curriculumApi.getLesson).mockResolvedValue({
+      ...mockArraysLesson,
+      id: "searching-and-sorting",
+      title: "Searching and Sorting",
+    });
+    vi.mocked(curriculumApi.getLessonFile).mockImplementation(
+      async (_lessonId, fileId) => {
+        if (fileId === "readme") {
+          return { ...mockReadmeContent, lessonId: "searching-and-sorting" };
+        }
+        return { ...mockPrimarySourceContent, lessonId: "searching-and-sorting" };
+      },
+    );
+
+    renderWithRouter(<LessonPage />, {
+      route: "/lessons/searching-and-sorting",
+      path: "/lessons/:lessonId",
+    });
+
+    expect(
+      await screen.findByRole("link", { name: "Open Visualizer" }),
+    ).toHaveAttribute("href", "/lessons/searching-and-sorting/visualize");
+  });
+
   it("shows a retryable lesson load failure", async () => {
     const user = userEvent.setup();
     vi.mocked(curriculumApi.listCurriculum)
