@@ -15,7 +15,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ["monaco-editor"],
+    exclude: ["monaco-editor"],
   },
   worker: {
     format: "es",
