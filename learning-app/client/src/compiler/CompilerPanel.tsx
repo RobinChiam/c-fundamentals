@@ -16,7 +16,8 @@ type CompileUiState =
   | "success"
   | "failed"
   | "timeout"
-  | "unavailable";
+  | "unavailable"
+  | "busy";
 
 interface CompilerPanelProps {
   lessonId: string;
@@ -45,6 +46,8 @@ function statusLabel(state: CompileUiState): string {
       return "Compilation timed out";
     case "unavailable":
       return "GCC unavailable";
+    case "busy":
+      return "Compiler busy — try again shortly";
     default:
       return "Ready to compile";
   }
@@ -115,6 +118,12 @@ export function CompilerPanel({ lessonId, workspace }: CompilerPanelProps) {
           current ? { ...current, available: false, version: null } : current,
         );
         setCompileError("GCC is not available on this machine.");
+        return;
+      }
+
+      if (error instanceof CompilerApiError && error.status === 429) {
+        setCompileState("busy");
+        setCompileError("Compiler is busy. Try again shortly.");
         return;
       }
 

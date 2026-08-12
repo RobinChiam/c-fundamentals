@@ -1,8 +1,11 @@
 import Fastify, { type FastifyInstance } from "fastify";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   createCompilerService,
   type CompilerService,
 } from "./compiler/compiler-service.js";
+import { createTrackedProcessRunner } from "./compiler/tracked-process-runner.js";
 import {
   createCurriculumService,
   type CurriculumService,
@@ -11,7 +14,10 @@ import { CURRICULUM_MANIFEST } from "./curriculum/manifest.js";
 import { resolveDefaultRepositoryRoot } from "./curriculum/repository-root.js";
 import { createDatabase } from "./persistence/database.js";
 import { resolveDefaultDatabasePath } from "./persistence/database-path.js";
-import { PersistenceInitializationError, UnsupportedMigrationVersionError } from "./persistence/persistence-errors.js";
+import {
+  PersistenceInitializationError,
+  UnsupportedMigrationVersionError,
+} from "./persistence/persistence-errors.js";
 import {
   createPersistenceService,
   createUnavailablePersistenceService,
@@ -35,6 +41,23 @@ import {
 import { createLabService, type LabService } from "./labs/lab-service.js";
 import { registerLabRoutes } from "./routes/labs.js";
 import { validateLabRegistry } from "./labs/validate-lab-registry.js";
+import {
+  DEFAULT_CONCURRENCY_CONFIG,
+  type ConcurrencyConfig,
+} from "./config/concurrency-config.js";
+import { resolveHttpConfig } from "./config/http-config.js";
+import {
+  createExecutionGate,
+  type ExecutionGate,
+} from "./concurrency/execution-gate.js";
+import { registerProductionErrorHandler } from "./errors/register-production-error-handler.js";
+import { registerSecurityHeaders } from "./security/security-headers.js";
+import { registerStaticServing } from "./static/static-serving.js";
+import {
+  cleanupOwnedDockerContainers,
+  createShutdownManager,
+  type ShutdownManager,
+} from "./shutdown/graceful-shutdown.js";
 
 export interface BuildAppOptions {
   curriculumService?: CurriculumService;
@@ -47,19 +70,59 @@ export interface BuildAppOptions {
   databasePath?: string;
   skipPersistence?: boolean;
   skipArchitectureValidation?: boolean;
+  serveStatic?: boolean;
+  clientDistPath?: string;
+  enableSecurityHeaders?: boolean;
+  concurrencyConfig?: ConcurrencyConfig;
+  compilerGate?: ExecutionGate;
+  sandboxGate?: ExecutionGate;
+  shutdownManager?: ShutdownManager;
+  registerSignalHandlers?: boolean;
+}
+
+function resolveDefaultClientDistPath(): string {
+  const serverDir = path.dirname(fileURLToPath(import.meta.url));
+  return path.resolve(serverDir, "../../client/dist");
 }
 
 export async function buildApp(
   options: BuildAppOptions = {},
 ): Promise<FastifyInstance> {
-  const app = Fastify({ logger: false });
+  const httpConfig = resolveHttpConfig();
+  const app = Fastify({
+    logger: false,
+    bodyLimit: httpConfig.bodyLimitBytes,
+    requestTimeout: httpConfig.requestTimeoutMs,
+  });
+
+  const concurrencyConfig =
+    options.concurrencyConfig ?? DEFAULT_CONCURRENCY_CONFIG;
+  const compilerGate =
+    options.compilerGate ?? createExecutionGate(concurrencyConfig.compilerCapacity);
+  const sandboxGate =
+    options.sandboxGate ?? createExecutionGate(concurrencyConfig.sandboxCapacity);
+
+  const trackedProcessRunner = createTrackedProcessRunner();
+  const shutdownManager =
+    options.shutdownManager ??
+    createShutdownManager({
+      cleanupOwnedDockerContainers,
+      terminateOwnedCompilerProcesses: () =>
+        trackedProcessRunner.terminateActiveProcesses(),
+    });
+
+  shutdownManager.registerShutdownHandler(async () => {
+    await app.close();
+  });
+
   const curriculumService =
     options.curriculumService ??
     createCurriculumService({
       repositoryRoot: options.repositoryRoot ?? resolveDefaultRepositoryRoot(),
     });
   const compilerService =
-    options.compilerService ?? createCompilerService();
+    options.compilerService ??
+    createCompilerService({ processRunner: trackedProcessRunner });
   const runnerService =
     options.runnerService ?? createRunnerService();
 
@@ -121,13 +184,42 @@ export async function buildApp(
     persistenceService?.close();
   });
 
+  if (options.enableSecurityHeaders ?? false) {
+    registerProductionErrorHandler(app);
+    await registerSecurityHeaders(app);
+  }
+
   await registerHealthRoutes(app);
   await registerCurriculumRoutes(app, curriculumService);
-  await registerCompilerRoutes(app, compilerService);
-  await registerRunnerRoutes(app, runnerService);
+  await registerCompilerRoutes(app, compilerService, {
+    compilerGate,
+    shutdownManager,
+  });
+  await registerRunnerRoutes(app, runnerService, {
+    sandboxGate,
+    shutdownManager,
+  });
   await registerPersistenceRoutes(app, persistenceService);
-  await registerLabRoutes(app, labService);
+  await registerLabRoutes(app, labService, {
+    sandboxGate,
+    shutdownManager,
+  });
   await registerArchitectureRoutes(app, architectureService);
 
+  if (options.serveStatic) {
+    await registerStaticServing(app, {
+      clientDistPath:
+        options.clientDistPath ?? resolveDefaultClientDistPath(),
+    });
+  }
+
+  app.decorate("shutdownManager", shutdownManager);
+
   return app;
+}
+
+declare module "fastify" {
+  interface FastifyInstance {
+    shutdownManager: ShutdownManager;
+  }
 }

@@ -35,6 +35,10 @@ build/
 
 # Learning app local SQLite persistence (Part 7)
 learning-app/.data/
+learning-app/.e2e-data/
+learning-app/test-results/
+learning-app/playwright-report/
+learning-app/playwright/.cache/
 *.sqlite3
 *.sqlite3-wal
 *.sqlite3-shm

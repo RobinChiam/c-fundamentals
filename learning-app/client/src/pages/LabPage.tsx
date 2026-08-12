@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
 import {
   LabsApiNotFoundError,
   LabsApiUnavailableError,
+  LabsApiBusyError,
   deleteAllLabDrafts,
   evaluateLab,
   getLab,
@@ -33,6 +34,8 @@ export function LabPage() {
   const { lessonId = "", labId = "" } = useParams();
   const [state, setState] = useState<LabPageState>({ kind: "loading" });
   const [retryToken, setRetryToken] = useState(0);
+  const solutionRevealTriggerRef = useRef<HTMLButtonElement>(null);
+  const solutionConfirmButtonRef = useRef<HTMLButtonElement>(null);
 
   const updateWorkspace = useCallback(
     (updater: (current: LabWorkspaceState) => LabWorkspaceState) => {
@@ -106,6 +109,23 @@ export function LabPage() {
   }, [loadLab, retryToken]);
 
   const workspace = state.kind === "ready" ? state.workspace : null;
+
+  useEffect(() => {
+    if (!workspace?.solutionConfirmOpen) {
+      return;
+    }
+    solutionConfirmButtonRef.current?.focus();
+  }, [workspace?.solutionConfirmOpen]);
+
+  const closeSolutionConfirm = useCallback(() => {
+    updateWorkspace((current) => ({
+      ...current,
+      solutionConfirmOpen: false,
+    }));
+    requestAnimationFrame(() => {
+      solutionRevealTriggerRef.current?.focus();
+    });
+  }, [updateWorkspace]);
   const submissionFile = workspace?.lab.starterFiles[0];
 
   const saveStatusLabel = useMemo(() => {
@@ -135,6 +155,7 @@ export function LabPage() {
       ...current,
       evaluating: true,
       evaluation: null,
+      evaluationError: null,
     }));
 
     try {
@@ -150,6 +171,7 @@ export function LabPage() {
         ...current,
         evaluating: false,
         evaluation,
+        evaluationError: null,
         attempts: attempts.attempts,
         lab:
           evaluation.outcome === "passed"
@@ -168,6 +190,12 @@ export function LabPage() {
         ...current,
         evaluating: false,
         runnerUnavailable: error instanceof LabsApiUnavailableError,
+        evaluationError:
+          error instanceof LabsApiBusyError
+            ? "Sandbox is busy. Try again shortly."
+            : error instanceof Error
+              ? error.message
+              : "Evaluation failed",
       }));
     }
   };
@@ -219,6 +247,9 @@ export function LabPage() {
         ...current,
         solutionConfirmOpen: false,
       }));
+      requestAnimationFrame(() => {
+        solutionRevealTriggerRef.current?.focus();
+      });
     }
   };
 
@@ -315,7 +346,9 @@ export function LabPage() {
             <h2 className="text-sm font-semibold text-slate-900">
               {submissionFile.name}
             </h2>
-            <p className="text-xs text-slate-500">{saveStatusLabel}</p>
+            <p className="text-xs text-slate-500" aria-live="polite">
+              {saveStatusLabel}
+            </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <button
@@ -375,6 +408,18 @@ export function LabPage() {
       <section className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="rounded-lg border border-slate-200 bg-white p-4">
           <h2 className="text-lg font-semibold text-slate-900">Tests</h2>
+          <p className="mt-1 text-sm text-slate-600" aria-live="polite">
+            {workspace.evaluating
+              ? "Running tests…"
+              : workspace.evaluation
+                ? `Test run completed: ${workspace.evaluation.outcome}`
+                : "Ready to run tests"}
+          </p>
+          {workspace.evaluationError ? (
+            <p className="mt-2 text-sm text-amber-800" role="alert">
+              {workspace.evaluationError}
+            </p>
+          ) : null}
           <ul className="mt-3 space-y-2">
             {[...workspace.lab.publicTests, ...workspace.lab.hiddenTests].map(
               (test) => {
@@ -476,13 +521,19 @@ export function LabPage() {
             ) : (
               <>
                 {workspace.solutionConfirmOpen ? (
-                  <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
-                    <p>
+                  <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="solution-reveal-title"
+                    className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+                  >
+                    <p id="solution-reveal-title">
                       This reveals the lesson&apos;s reference solution.c and may
                       contain answers for more than this individual exercise.
                     </p>
                     <div className="mt-3 flex gap-2">
                       <button
+                        ref={solutionConfirmButtonRef}
                         type="button"
                         onClick={() => {
                           void handleRevealSolution();
@@ -493,12 +544,7 @@ export function LabPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          updateWorkspace((current) => ({
-                            ...current,
-                            solutionConfirmOpen: false,
-                          }));
-                        }}
+                        onClick={closeSolutionConfirm}
                         className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800"
                       >
                         Cancel
@@ -507,6 +553,7 @@ export function LabPage() {
                   </div>
                 ) : (
                   <button
+                    ref={solutionRevealTriggerRef}
                     type="button"
                     onClick={() => {
                       updateWorkspace((current) => ({

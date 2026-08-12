@@ -29,7 +29,8 @@ type CompileUiState =
   | "success"
   | "failed"
   | "timeout"
-  | "unavailable";
+  | "unavailable"
+  | "busy";
 
 type RunUiState =
   | "idle"
@@ -39,7 +40,8 @@ type RunUiState =
   | "runtime_error"
   | "timeout"
   | "output_limit"
-  | "unavailable";
+  | "unavailable"
+  | "busy";
 
 interface RunPanelProps {
   lessonId: string;
@@ -78,6 +80,8 @@ function compileStatusLabel(state: CompileUiState): string {
       return "Compilation timed out";
     case "unavailable":
       return "GCC unavailable";
+    case "busy":
+      return "Compiler busy — try again shortly";
     default:
       return "Ready to compile";
   }
@@ -99,6 +103,8 @@ function runStatusLabel(state: RunUiState): string {
       return "Output limit exceeded";
     case "unavailable":
       return "Runner unavailable";
+    case "busy":
+      return "Sandbox busy — try again shortly";
     default:
       return "Ready";
   }
@@ -224,6 +230,12 @@ export function RunPanel({ lessonId, workspace }: RunPanelProps) {
         return;
       }
 
+      if (error instanceof CompilerApiError && error.status === 429) {
+        setCompileState("busy");
+        setCompileError("Compiler is busy. Try again shortly.");
+        return;
+      }
+
       setCompileState("failed");
       setCompileError(
         error instanceof Error ? error.message : "Compilation request failed",
@@ -262,6 +274,12 @@ export function RunPanel({ lessonId, workspace }: RunPanelProps) {
           current ? { ...current, available: false } : current,
         );
         setRunError("Program runner is not available.");
+        return;
+      }
+
+      if (error instanceof RunnerApiError && error.status === 429) {
+        setRunState("busy");
+        setRunError("Sandbox is busy. Try again shortly.");
         return;
       }
 

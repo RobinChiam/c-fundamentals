@@ -1,17 +1,32 @@
 import type { FastifyInstance } from "fastify";
-import { runRequestSchema, runResponseSchema, runnerStatusSchema } from "@learning-app/shared";
+import {
+  runRequestSchema,
+  runResponseSchema,
+  runnerStatusSchema,
+} from "@learning-app/shared";
 import { LessonNotFoundError } from "../curriculum/curriculum-service.js";
 import {
   InvalidWorkspaceError,
   PayloadTooLargeError,
 } from "../compiler/compiler-errors.js";
-import { RunInternalError, RunnerUnavailableError } from "../runner/runner-errors.js";
+import {
+  RunInternalError,
+  RunnerUnavailableError,
+} from "../runner/runner-errors.js";
 import { RUN_BODY_LIMIT_BYTES } from "../runner/runner-config.js";
 import type { RunnerService } from "../runner/runner-service.js";
+import type { ExecutionGate } from "../concurrency/execution-gate.js";
+import type { ShutdownManager } from "../shutdown/graceful-shutdown.js";
+
+export interface RunnerRouteOptions {
+  sandboxGate?: ExecutionGate;
+  shutdownManager?: ShutdownManager;
+}
 
 export async function registerRunnerRoutes(
   app: FastifyInstance,
   runnerService: RunnerService,
+  options: RunnerRouteOptions = {},
 ): Promise<void> {
   app.get("/api/runner/status", async () => {
     const status = await runnerService.getStatus();
@@ -24,9 +39,20 @@ export async function registerRunnerRoutes(
       bodyLimit: RUN_BODY_LIMIT_BYTES,
     },
     async (request, reply) => {
+      if (options.shutdownManager?.isShuttingDown()) {
+        return reply.status(503).send({ error: "Server is shutting down" });
+      }
+
       const parsedBody = runRequestSchema.safeParse(request.body);
       if (!parsedBody.success) {
         return reply.status(400).send({ error: "Invalid run request" });
+      }
+
+      const gate = options.sandboxGate;
+      if (gate && !gate.tryAcquire()) {
+        return reply.status(429).send({
+          error: "Sandbox is busy. Try again shortly.",
+        });
       }
 
       try {
@@ -55,6 +81,8 @@ export async function registerRunnerRoutes(
           return reply.status(500).send({ error: "Run service error" });
         }
         throw error;
+      } finally {
+        gate?.release();
       }
     },
   );

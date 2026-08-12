@@ -13,10 +13,22 @@ import {
 } from "../compiler/compiler-errors.js";
 import { COMPILE_BODY_LIMIT_BYTES } from "../compiler/compiler-limits.js";
 import type { CompilerService } from "../compiler/compiler-service.js";
+import {
+  ExecutionBusyError,
+  withExecutionGate,
+  type ExecutionGate,
+} from "../concurrency/execution-gate.js";
+import type { ShutdownManager } from "../shutdown/graceful-shutdown.js";
+
+export interface CompilerRouteOptions {
+  compilerGate?: ExecutionGate;
+  shutdownManager?: ShutdownManager;
+}
 
 export async function registerCompilerRoutes(
   app: FastifyInstance,
   compilerService: CompilerService,
+  options: CompilerRouteOptions = {},
 ): Promise<void> {
   app.get("/api/compiler/status", async () => {
     const status = await compilerService.getStatus();
@@ -29,10 +41,20 @@ export async function registerCompilerRoutes(
       bodyLimit: COMPILE_BODY_LIMIT_BYTES,
     },
     async (request, reply) => {
-      let body: unknown = request.body;
-      const parsedBody = compileRequestSchema.safeParse(body);
+      if (options.shutdownManager?.isShuttingDown()) {
+        return reply.status(503).send({ error: "Server is shutting down" });
+      }
+
+      const parsedBody = compileRequestSchema.safeParse(request.body);
       if (!parsedBody.success) {
         return reply.status(400).send({ error: "Invalid compile request" });
+      }
+
+      const gate = options.compilerGate;
+      if (gate && !gate.tryAcquire()) {
+        return reply.status(429).send({
+          error: "Compiler is busy. Try again shortly.",
+        });
       }
 
       try {
@@ -59,7 +81,11 @@ export async function registerCompilerRoutes(
           return reply.status(500).send({ error: "Compile service error" });
         }
         throw error;
+      } finally {
+        gate?.release();
       }
     },
   );
 }
+
+export { withExecutionGate, ExecutionBusyError };

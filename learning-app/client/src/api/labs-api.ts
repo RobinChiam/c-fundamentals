@@ -33,6 +33,13 @@ export class LabsApiUnavailableError extends LabsApiError {
   }
 }
 
+export class LabsApiBusyError extends LabsApiError {
+  constructor(message: string) {
+    super(message);
+    this.name = "LabsApiBusyError";
+  }
+}
+
 async function parseJson<T>(response: Response): Promise<T> {
   const text = await response.text();
   if (!text) {
@@ -59,6 +66,10 @@ async function request<T>(
   if (response.status === 503) {
     const body = await parseJson<{ error?: string }>(response);
     throw new LabsApiUnavailableError(body.error ?? "Service unavailable");
+  }
+  if (response.status === 429) {
+    const body = await parseJson<{ error?: string }>(response);
+    throw new LabsApiBusyError(body.error ?? "Sandbox is busy. Try again shortly.");
   }
   if (!response.ok) {
     const body = await parseJson<{ error?: string }>(response);

@@ -1,6 +1,7 @@
 {
   "name": "c-fundamentals-learning-app",
   "private": true,
+  "packageManager": "pnpm@9.15.9",
   "engines": {
     "node": ">=22"
   },
@@ -8,9 +9,17 @@
     "predev": "pnpm --filter @learning-app/shared build",
     "dev": "pnpm --parallel -r dev",
     "build": "pnpm -r build",
+    "prestart": "pnpm build",
+    "start": "NODE_ENV=production pnpm --filter @learning-app/server start",
+    "start:test": "NODE_ENV=production pnpm --filter @learning-app/server start",
     "pretest": "pnpm --filter @learning-app/shared build",
     "test": "pnpm -r test",
     "pretypecheck": "pnpm --filter @learning-app/shared build",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "test:e2e": "playwright test",
+    "test:e2e:docker": "playwright test --grep @docker"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.51.0"
   }
 }

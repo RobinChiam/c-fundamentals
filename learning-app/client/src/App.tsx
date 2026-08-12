@@ -1,5 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { AppShell } from "./components/AppShell";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { RouteFocusManager } from "./components/RouteFocusManager";
 import { CurriculumPage } from "./pages/CurriculumPage";
 import { LabPage } from "./pages/LabPage";
 import { LessonPage } from "./pages/LessonPage";
@@ -14,8 +16,10 @@ import { WorkspaceProvider } from "./workspace/WorkspaceProvider";
 
 export function App() {
   return (
-    <BrowserRouter>
-      <WorkspaceProvider>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <RouteFocusManager />
+        <WorkspaceProvider>
         <Routes>
           <Route path="/" element={<AppShell />}>
             <Route index element={<CurriculumPage />} />
@@ -51,7 +55,8 @@ export function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
-      </WorkspaceProvider>
-    </BrowserRouter>
+        </WorkspaceProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }

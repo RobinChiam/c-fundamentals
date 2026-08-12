@@ -99,9 +99,20 @@ export function RuntimeTerminal({ execution }: RuntimeTerminalProps) {
   return (
     <div className="mt-4">
       <h4 className="mb-2 text-sm font-medium text-slate-700">Program output</h4>
+      {execution ? (
+        <pre
+          className="sr-only"
+          aria-live="polite"
+          data-testid="runtime-output-text"
+        >
+          {formatExecutionLines(execution).join("\n")}
+        </pre>
+      ) : (
+        <p className="sr-only">Run a program to see terminal output here.</p>
+      )}
       <div
         ref={containerRef}
-        aria-label="Program output terminal"
+        aria-hidden="true"
         className="h-56 overflow-hidden rounded-md border border-slate-800 bg-slate-950 p-1"
       />
     </div>

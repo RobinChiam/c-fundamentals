@@ -16,6 +16,7 @@ export interface LabWorkspaceState {
   staleDraft: LabDraft | null;
   evaluation: LabEvaluationResponse | null;
   evaluating: boolean;
+  evaluationError: string | null;
   runnerUnavailable: boolean;
   attempts: LabAttemptSummary[];
   revealedHints: HintRevealResponse[];
@@ -36,6 +37,7 @@ export function createInitialLabWorkspaceState(lab: LabDetail): LabWorkspaceStat
     staleDraft: null,
     evaluation: null,
     evaluating: false,
+    evaluationError: null,
     runnerUnavailable: false,
     attempts: [],
     revealedHints: lab.revealedHints.map((hint) => ({

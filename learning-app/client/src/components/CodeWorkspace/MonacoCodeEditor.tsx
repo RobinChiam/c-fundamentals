@@ -6,12 +6,14 @@ interface MonacoCodeEditorProps {
   value: string;
   onChange: (value: string) => void;
   readOnly?: boolean;
+  ariaLabel?: string;
 }
 
 export function MonacoCodeEditor({
   value,
   onChange,
   readOnly = false,
+  ariaLabel = "C source code editor",
 }: MonacoCodeEditorProps) {
   useEffect(() => {
     setupMonaco();
@@ -26,6 +28,8 @@ export function MonacoCodeEditor({
       onChange={(nextValue) => onChange(nextValue ?? "")}
       options={{
         readOnly,
+        ariaLabel,
+        accessibilitySupport: "on",
         minimap: { enabled: false },
         fontSize: 14,
         lineNumbers: "on",

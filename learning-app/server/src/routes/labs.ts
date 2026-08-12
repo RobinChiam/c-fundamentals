@@ -22,10 +22,18 @@ import {
 } from "../labs/lab-errors.js";
 import type { LabService } from "../labs/lab-service.js";
 import { RunnerUnavailableError } from "../runner/runner-errors.js";
+import type { ExecutionGate } from "../concurrency/execution-gate.js";
+import type { ShutdownManager } from "../shutdown/graceful-shutdown.js";
+
+export interface LabRouteOptions {
+  sandboxGate?: ExecutionGate;
+  shutdownManager?: ShutdownManager;
+}
 
 export async function registerLabRoutes(
   app: FastifyInstance,
   labService: LabService,
+  options: LabRouteOptions = {},
 ): Promise<void> {
   app.get<{ Params: { lessonId: string } }>(
     "/api/lessons/:lessonId/labs",
@@ -147,9 +155,20 @@ export async function registerLabRoutes(
   app.post<{ Params: { labId: string } }>(
     "/api/labs/:labId/evaluate",
     async (request, reply) => {
+      if (options.shutdownManager?.isShuttingDown()) {
+        return reply.status(503).send({ error: "Server is shutting down" });
+      }
+
       const parsedBody = labEvaluationRequestSchema.safeParse(request.body);
       if (!parsedBody.success) {
         return reply.status(400).send({ error: "Invalid evaluation request" });
+      }
+
+      const gate = options.sandboxGate;
+      if (gate && !gate.tryAcquire()) {
+        return reply.status(429).send({
+          error: "Sandbox is busy. Try again shortly.",
+        });
       }
 
       try {
@@ -173,6 +192,8 @@ export async function registerLabRoutes(
           return reply.status(500).send({ error: "Lab integrity error" });
         }
         throw error;
+      } finally {
+        gate?.release();
       }
     },
   );
