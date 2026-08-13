@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type {
@@ -47,6 +47,10 @@ import {
 } from "./runner-config.js";
 import { RunInternalError, RunnerUnavailableError } from "./runner-errors.js";
 import { probeRunnerStatus } from "./runner-status.js";
+import {
+  makeSandboxWorkspaceAccessible,
+  writeSandboxWorkspaceFile,
+} from "./sandbox-workspace.js";
 
 export interface RunnerServiceOptions {
   manifest?: ManifestLessonEntry[];
@@ -76,10 +80,13 @@ async function writeWorkspaceFiles(
 ): Promise<void> {
   await Promise.all(
     files.map(async (file) => {
-      const filePath = path.join(workspaceDir, file.name);
-      await writeFile(filePath, file.content, "utf8");
+      await writeSandboxWorkspaceFile(
+        path.join(workspaceDir, file.name),
+        file.content,
+      );
     }),
   );
+  await makeSandboxWorkspaceAccessible(workspaceDir);
 }
 
 function resolveSourceFileNames(lesson: ManifestLessonEntry): string[] {

@@ -1,4 +1,4 @@
-import { access } from "node:fs/promises";
+import { access, stat } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { CURRICULUM_MANIFEST } from "../curriculum/manifest.js";
 import { validateCompileRequest } from "../compiler/compiler-workspace.js";
@@ -9,6 +9,7 @@ import {
 import { BASE_GCC_FLAGS } from "../compiler/compiler-limits.js";
 import { buildCompileDockerArgs } from "./docker-runtime.js";
 import { MAX_STDIN_BYTES, RUNNER_IMAGE } from "./runner-config.js";
+import { SANDBOX_WORKSPACE_DIR_MODE } from "./sandbox-workspace.js";
 import { createRunnerService } from "./runner-service.js";
 import {
   createReadyDockerRunner,
@@ -308,6 +309,8 @@ describe("runner service", () => {
         observedHostMount = mount?.split(":")[0] ?? "";
         expect(observedHostMount).toContain("c-fundamentals-run-");
         expect(observedHostMount).not.toContain("learning-app");
+        const workspaceStat = await stat(observedHostMount);
+        expect(workspaceStat.mode & 0o0777).toBe(SANDBOX_WORKSPACE_DIR_MODE);
         return successfulDockerResult({ exitCode: 0 });
       }
       return successfulDockerResult({ exitCode: 0, stdout: "ok" });

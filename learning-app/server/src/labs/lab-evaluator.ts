@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import type {
@@ -31,6 +31,10 @@ import {
   SANDBOX_EXECUTABLE_NAME,
   TEMP_LAB_WORKSPACE_PREFIX,
 } from "../runner/runner-config.js";
+import {
+  makeSandboxWorkspaceAccessible,
+  writeSandboxWorkspaceFile,
+} from "../runner/sandbox-workspace.js";
 import { LabIntegrityError } from "./lab-errors.js";
 import type { LabDefinition } from "./lab-types.js";
 import { generateProtocolToken, parseProtocolResults } from "./test-protocol.js";
@@ -150,16 +154,15 @@ async function writeEvaluationWorkspace(
   harnessFileName: string,
   harnessContent: string,
 ): Promise<void> {
-  await writeFile(
+  await writeSandboxWorkspaceFile(
     path.join(workspaceDir, submissionFileName),
     submissionContent,
-    "utf8",
   );
-  await writeFile(
+  await writeSandboxWorkspaceFile(
     path.join(workspaceDir, harnessFileName),
     harnessContent,
-    "utf8",
   );
+  await makeSandboxWorkspaceAccessible(workspaceDir);
 }
 
 export function createLabEvaluator(

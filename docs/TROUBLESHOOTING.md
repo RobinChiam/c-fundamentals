@@ -79,6 +79,18 @@ pnpm exec playwright install --with-deps
 pnpm test:e2e
 ```
 
+## Compile: Permission denied on the source file
+
+Raw compiler output like:
+
+```
+cc1: fatal error: shapes.c: Permission denied
+```
+
+means the Docker sandbox could not read the temporary workspace. This is not a C syntax error.
+
+The sandbox drops all Linux capabilities, so container processes cannot open the default `0700` temp directory. Current versions chmod that workspace before compile. Restart the learning-app server after upgrading, then Run again.
+
 ## Compiler/run busy
 
 If many compile/run/lab requests overlap, the server returns HTTP 429. Wait and retry.
