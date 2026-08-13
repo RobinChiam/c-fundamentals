@@ -184,6 +184,23 @@ describe("runner service", () => {
     expect(executeCall?.args).toContain("/workspace/program");
   });
 
+  it("appends a newline when Program input has no Enter", async () => {
+    const { service, calls } = readyRunner(async (_options, phase) => {
+      if (phase === "compile") {
+        return successfulDockerResult({ exitCode: 0 });
+      }
+      return successfulDockerResult({ exitCode: 0, stdout: "ok\n" });
+    });
+
+    await service.runLesson("arrays", {
+      ...arraysWorkspace(),
+      stdin: "5",
+    });
+
+    const executeCall = calls.find((call) => call.args.includes("--entrypoint"));
+    expect(executeCall?.stdin).toBe("5\n");
+  });
+
   it("proceeds to execution after container compile without host chmod", async () => {
     const { service, calls } = readyRunner(async (_options, phase) => {
       if (phase === "compile") {

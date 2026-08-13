@@ -91,6 +91,15 @@ means the Docker sandbox could not read the temporary workspace. This is not a C
 
 The sandbox drops all Linux capabilities, so container processes cannot open the default `0700` temp directory. Current versions chmod that workspace before compile. Restart the learning-app server after upgrading, then Run again.
 
+## Run: Input too long / runtime error with a short value
+
+Lesson programs read a full line with `fgets` and treat a last line without a
+newline as too long. Typing `5` in Program input (no Enter) used to be sent
+exactly as `5`, so Drawing Shapes printed "Input too long" and exited 1.
+
+Current versions append a newline before the sandbox runs. Restart the server
+after upgrading.
+
 ## Compiler/run busy
 
 If many compile/run/lab requests overlap, the server returns HTTP 429. Wait and retry.

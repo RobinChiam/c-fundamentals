@@ -47,6 +47,7 @@ import {
 } from "./runner-config.js";
 import { RunInternalError, RunnerUnavailableError } from "./runner-errors.js";
 import { probeRunnerStatus } from "./runner-status.js";
+import { normalizeSandboxStdin } from "./sandbox-stdin.js";
 import {
   makeSandboxWorkspaceAccessible,
   writeSandboxWorkspaceFile,
@@ -280,7 +281,7 @@ export function createRunnerService(
             containerName: runContainerName,
             hostWorkspacePath: workspaceDir,
           }),
-          stdin: request.stdin,
+          stdin: normalizeSandboxStdin(request.stdin),
           timeoutMs: EXECUTION_TIMEOUT_MS,
           maxStdoutBytes: MAX_STDOUT_BYTES,
           maxStderrBytes: MAX_STDERR_BYTES,
